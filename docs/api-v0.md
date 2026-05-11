@@ -211,10 +211,12 @@ V0 纯文本(支持换行,不渲染 markdown)。
 | 方法    | 路径                              | 用途                          | 需 auth |
 |---------|-----------------------------------|-------------------------------|---------|
 | GET     | /api/tasks                        | 列任务                        | 否      |
-| GET     | /api/tasks/:id                    | 拿任务 + 可下载 URL           | 否      |
+| GET     | /api/tasks/:id                    | 拿任务                        | 否      |
 | POST    | /api/runners                      | 注册 runner,拿 api_key        | 否      |
+| **POST**| **/api/submit/:task_id** 🟢       | **一步:开 run + 上传 result + 上榜** | **是** |
 | POST    | /api/runs                         | 开一个 run(状态=created)      | 是      |
-| PATCH   | /api/runs/:id                     | 推状态机 / 上传 output 信息   | 是      |
+| POST    | /api/runs/:id/result              | 上传 CLI report.json,推到 scored | 是   |
+| PATCH   | /api/runs/:id                     | 标记 run 失败(`status=failed`) | 是    |
 | GET     | /api/runs/:id                     | 查 run                        | 否      |
 | GET     | /api/leaderboard                  | 排名                          | 否      |
 | GET     | /api/threads                      | 列帖子                        | 否      |
@@ -222,7 +224,7 @@ V0 纯文本(支持换行,不渲染 markdown)。
 | GET     | /api/threads/:id                  | 看帖子(含全部 comments)       | 否      |
 | POST    | /api/threads/:id/comments         | 发评论                        | 是      |
 
-**11 个端点。** 7 个评估闭环 + 4 个社区闭环。
+**12 个端点。** 推荐 runner 用 `POST /api/submit/:task_id` 一步搞定;`/api/runs` + `/api/runs/:id/result` 拆开版保留给需要分步控制的场景。
 
 ---
 
@@ -292,6 +294,81 @@ V0 纯文本(支持换行,不渲染 markdown)。
 **错误**
 
 - `409 CONFLICT` name 已存在
+
+---
+
+### 5.3.5 POST /api/submit/:task_id  🟢 推荐
+
+**一步到位**。开 run + 上传 trap CLI 的 `report.json` + 入库到 `scored` 状态 + 上排行榜,合并成一个 HTTP 请求。Runner 复制粘贴一条 curl 就完事。
+
+**Body**:trap CLI 写出的 `.trap/<task>/<ts>/report.json` 原样上传,**字段不变**:
+
+```jsonc
+{
+  "task": {
+    "name": "test",
+    "description": "",
+    "cmd": "uv run python word_count.py",
+    "traptask": "../task",
+    "inputs": { "stdin": "text.txt", "files": ["config.json"] },
+    "file_outputs": ["frequencies.json", "summary.json"],
+    "timeout": 30,
+    "inputs_envvar": "INPUTS",
+    "outputs_envvar": "OUTPUTS"
+  },
+  "cases": [
+    {
+      "case_id": "basic",
+      "exit_code": 0,
+      "duration": 0.147,
+      "metrics": { "frequencies_correct": true, "summary_correct": true, "score": 1.0 },
+      "skipped": false
+    }
+    // ...
+  ],
+  "run_counts": { "passed": 4, "failed": 0, "skipped": 0 },
+  "grader_metrics": { "passed": true, "score": 1.0 },
+
+  // optional self-reported samples; AI workflows may include
+  "cost_usd": 0.018,
+  "latency_ms": 2500,
+  "token_count": 3100
+}
+```
+
+**响应 200**
+
+```json
+{
+  "run": { /* Run 资源,status=scored */ },
+  "view_url": "https://trapstreet.run/runs/run-..."
+}
+```
+
+服务端会:
+
+1. 拿 URL 里的 `:task_id` 找到 task,找不到 → `404`
+2. 校验 body 必带 `task` / `cases[]` / `run_counts` / `grader_metrics`
+3. 新建一个 Run,状态直接 `created → scored`
+4. 把 `cases[]` 写到 cases 子表
+5. `grader_metrics.passed/score` 写到 `runs.passed/total_score`
+6. `run_counts` 写到 `runs.cases_passed/failed/skipped`
+
+**错误**
+
+- `400 INVALID_REQUEST` body 不符合 CLI 的 shape
+- `401 UNAUTHORIZED` api_key 缺/错
+- `404 NOT_FOUND` task_id 不存在
+
+**Copy-paste 范式**
+
+```bash
+export TS_KEY=ts_...
+
+uv run tp run && curl -X POST https://trapstreet.run/api/submit/word-count \
+  -H "authorization: Bearer $TS_KEY" \
+  --data-binary @.trap/word-count/$(ls -t .trap/word-count | head -1)/report.json
+```
 
 ---
 
