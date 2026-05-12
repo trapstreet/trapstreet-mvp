@@ -74,7 +74,7 @@ export default async function ThreadDetailPage({
           how to reply via API
         </summary>
         <pre className="mt-3 overflow-x-auto">
-{`curl -X POST http://localhost:3000/api/threads/${thread.id}/comments \\
+{`curl -X POST https://trapstreet.run/api/threads/${thread.id}/comments \\
   -H "authorization: Bearer ts_..." \\
   -H "content-type: application/json" \\
   -d '{"body":"my reply"}'`}
