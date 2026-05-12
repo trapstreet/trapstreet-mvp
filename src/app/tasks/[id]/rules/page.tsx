@@ -10,27 +10,49 @@ export default async function TaskRulesPage({
   const task = await getTask(id);
   if (!task) notFound();
 
-  if (!task.rules_md) {
+  if (!task.rules_md && !task.io_md) {
     return (
       <p className="text-[var(--muted)]">
-        No rules defined for this task yet.
+        No rules or contract defined for this task yet.
       </p>
     );
   }
 
   return (
-    <div className="rounded border border-[var(--border)] p-6">
-      <RulesBlock md={task.rules_md} />
+    <div className="space-y-6">
+      {task.rules_md && (
+        <section>
+          <p className="mb-2 text-[10px] uppercase tracking-widest text-[var(--muted)]">
+            rules
+          </p>
+          <div className="rounded border border-[var(--border)] p-6">
+            <RulesBlock md={task.rules_md} />
+          </div>
+        </section>
+      )}
+
+      {task.io_md && (
+        <section>
+          <p className="mb-2 text-[10px] uppercase tracking-widest text-[var(--muted)]">
+            inputs · outputs · scoring
+          </p>
+          <div className="rounded border border-[var(--border)] p-6">
+            <RulesBlock md={task.io_md} />
+          </div>
+        </section>
+      )}
     </div>
   );
 }
 
-// Inline Markdown renderer — h2 / list / `code` / **bold** only.
-// Keeps the dep list at zero.
+// Inline Markdown renderer.
+// Supports: ## h2, ### h3, - list, ``` fenced code, inline `code`, **bold**.
+// No deps. ~80 lines.
 function RulesBlock({ md }: { md: string }) {
   const lines = md.split("\n");
   const out: React.ReactNode[] = [];
   let listBuf: string[] = [];
+  let codeBuf: string[] | null = null; // null = not in a code block
 
   const flushList = () => {
     if (listBuf.length === 0) return;
@@ -46,8 +68,39 @@ function RulesBlock({ md }: { md: string }) {
     listBuf = [];
   };
 
+  const flushCode = () => {
+    if (codeBuf === null) return;
+    out.push(
+      <pre
+        key={`pre-${out.length}`}
+        className="mb-3 overflow-x-auto rounded border border-[var(--border)] bg-black/40 p-3 text-xs"
+      >
+        <code>{codeBuf.join("\n")}</code>
+      </pre>,
+    );
+    codeBuf = null;
+  };
+
   for (const raw of lines) {
     const line = raw.trimEnd();
+
+    // fenced code block boundary
+    if (line.startsWith("```")) {
+      if (codeBuf === null) {
+        flushList();
+        codeBuf = [];
+      } else {
+        flushCode();
+      }
+      continue;
+    }
+
+    // inside a code block — collect verbatim
+    if (codeBuf !== null) {
+      codeBuf.push(raw);
+      continue;
+    }
+
     if (line.startsWith("## ")) {
       flushList();
       out.push(
@@ -57,6 +110,16 @@ function RulesBlock({ md }: { md: string }) {
         >
           {line.slice(3)}
         </h2>,
+      );
+    } else if (line.startsWith("### ")) {
+      flushList();
+      out.push(
+        <h3
+          key={`h-${out.length}`}
+          className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wider text-[var(--foreground)] first:mt-0"
+        >
+          {line.slice(4)}
+        </h3>,
       );
     } else if (line.startsWith("- ")) {
       listBuf.push(line.slice(2));
@@ -72,6 +135,7 @@ function RulesBlock({ md }: { md: string }) {
     }
   }
   flushList();
+  flushCode();
   return <div>{out}</div>;
 }
 

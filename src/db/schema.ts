@@ -84,6 +84,11 @@ export const tasks = pgTable("tasks", {
     .notNull()
     .default("desc"),
   rules_md: text("rules_md").notNull().default(""),
+  // Concrete contract for this task: sample case inputs, expected outputs,
+  // and how judge/grader score it. Rendered on the Rules tab alongside
+  // rules_md. Markdown with `## h2`, `- list`, ``` fenced code, inline code,
+  // and **bold**.
+  io_md: text("io_md").notNull().default(""),
   created_at: timestamp("created_at", { withTimezone: true })
     .notNull()
     .default(sql`now()`),

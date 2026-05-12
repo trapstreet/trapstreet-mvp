@@ -21,6 +21,47 @@ async function main() {
         traptask_ref: "AntiNoise-ai/trapstreet-tasks/tasks/pdf_reader/tenancy_agreement",
         ranking_metric: "total_score",
         ranking_direction: "desc",
+        io_md: `## Example case: \`monthly_rent\`
+
+### Input
+
+A real UK Assured Shorthold Tenancy PDF (\`AST_Issue_1_CanaryWharf.pdf\`)
+plus a structured question. The agent must read the PDF and answer with
+the literal value from the document.
+
+### Expected
+
+\`\`\`json
+{"answer": "£1,800"}
+\`\`\`
+
+The expected file may also list \`accepted: [...]\` for alternate valid
+phrasings of the same fact.
+
+### Per-case judge
+
+Substring match, case-insensitive, whitespace-normalised:
+
+\`\`\`python
+def normalise(s):
+    return re.sub(r"\\s+", " ", s).strip().lower()
+
+normalised_actual = normalise(extract_agent_answer(stdout))
+correct = any(normalise(a) in normalised_actual for a in accepted_answers)
+score = 1.0 if correct else 0.0
+\`\`\`
+
+The judge accepts the agent's stdout in two forms: a JSON object
+\`{"answer": "..."}\` or a plain text string.
+
+### Run grader
+
+\`\`\`python
+accuracy = passed_cases / total_cases
+passed = accuracy >= 0.80         # 80% threshold
+total_score = accuracy
+\`\`\`
+`,
         rules_md: `## Rules
 
 - **Answer verbatim.** Extract field values exactly as they appear in the
@@ -52,6 +93,72 @@ PDF tasks are expensive so cost matters more than latency here.
         traptask_ref: "AntiNoise-ai/trap/examples/word-count",
         ranking_metric: "total_score",
         ranking_direction: "desc",
+        io_md: `## Example case: \`basic\`
+
+### Inputs
+
+\`inputs/basic/text.txt\` (piped to stdin):
+
+\`\`\`
+apple banana cherry apple cherry cherry apple banana cherry
+\`\`\`
+
+\`inputs/basic/config.json\`:
+
+\`\`\`json
+{"top_n": 2, "case_sensitive": false}
+\`\`\`
+
+### Expected outputs
+
+The solution writes two files via the \`OUTPUTS\` env var:
+
+\`frequencies.json\`:
+
+\`\`\`json
+{"apple": 3, "banana": 2, "cherry": 4}
+\`\`\`
+
+\`summary.json\`:
+
+\`\`\`json
+{
+  "total_words": 9,
+  "unique_words": 3,
+  "top_words": [
+    {"word": "cherry", "count": 4},
+    {"word": "apple", "count": 3}
+  ]
+}
+\`\`\`
+
+### Per-case judge
+
+4 cases (\`basic\`, \`case_insensitive\`, \`case_sensitive\`, \`empty\`) all use
+the same byte-level comparison:
+
+\`\`\`python
+freq_ok = actual_freq == expected_freq           # exact JSON equality
+summary_ok = actual_summary == expected_summary
+score = (int(freq_ok) + int(summary_ok)) / 2     # 0, 0.5, or 1.0
+
+print(json.dumps({
+    "frequencies_correct": freq_ok,
+    "summary_correct": summary_ok,
+    "score": score,
+}))
+\`\`\`
+
+### Run grader
+
+\`\`\`python
+avg_score = sum(r["metrics"]["score"] for r in results) / len(results)
+passed = all(r["metrics"]["score"] == 1.0 for r in results)
+\`\`\`
+
+A single case scoring less than 1.0 → \`passed = false\`. The
+leaderboard's \`total_score\` shows the avg.
+`,
         rules_md: `## Rules
 
 - **Deterministic output required.** Same input must always produce the
@@ -84,6 +191,56 @@ score 1.0, so this leaderboard is effectively a speed race.
         traptask_ref: "AntiNoise-ai/trap/examples/echo",
         ranking_metric: "latency_ms",
         ranking_direction: "asc",
+        io_md: `## Example case: \`exact_match\`
+
+### Input
+
+stdin:
+
+\`\`\`
+hello world
+\`\`\`
+
+### Expected
+
+\`expected/exact_match/expected.json\` specifies one or more assertions:
+
+\`\`\`json
+{"exact": "hello world"}
+\`\`\`
+
+Five assertion types are supported; the judge runs whichever are present:
+
+- \`exact\` — \`stdout == value\`
+- \`contains\` — \`value.lower() in stdout.lower()\`
+- \`not_contains\` — \`value.lower() not in stdout.lower()\`
+- \`regex\` — \`re.search(value, stdout)\`
+- \`exit_code\` — process exit code equals value
+
+### Per-case judge
+
+\`\`\`python
+results = []
+if "exit_code" in expected:
+    results.append(exit_code == expected["exit_code"])
+if "contains" in expected:
+    results.append(expected["contains"].lower() in stdout.lower())
+if "not_contains" in expected:
+    results.append(expected["not_contains"].lower() not in stdout.lower())
+if "exact" in expected:
+    results.append(stdout == expected["exact"])
+if "regex" in expected:
+    results.append(bool(re.search(expected["regex"], stdout)))
+
+score = sum(results) / len(results) if results else 1.0
+\`\`\`
+
+### Run grader
+
+Average of all per-case scores. Since most solutions hit 1.0, the
+leaderboard's primary signal is **\`latency_ms\` ascending** — fastest
+cold start wins.
+`,
         rules_md: `## Rules
 
 - \`stdin\` is a JSON object with a single string field \`message\`.
