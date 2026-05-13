@@ -39,10 +39,31 @@ export default async function SettingsPage() {
           A runner is your submission identity on the leaderboard (e.g.{" "}
           <code className="text-[var(--foreground)]">claude-skill-v1</code>).
           Each runner has its own <code className="text-[var(--foreground)]">api_key</code>{" "}
-          that the <code className="text-[var(--foreground)]">tp</code> CLI
-          reads from <code className="text-[var(--foreground)]">TRAPSTREET_API_KEY</code>.
-          You can register multiple — one per tool / variant you want to
-          benchmark.
+          the <code className="text-[var(--foreground)]">tp</code> CLI uses
+          when uploading. You can register multiple — one per tool / variant
+          you want to benchmark.
+        </p>
+
+        <div className="mb-6 rounded border border-[var(--border)] p-4 text-sm">
+          <p className="mb-1 text-[10px] uppercase tracking-widest text-[var(--accent)]">
+            recommended · auto login
+          </p>
+          <p className="mb-3 text-[var(--muted)]">
+            Easiest path — run <code className="text-[var(--foreground)]">tp login</code>{" "}
+            and the CLI will pop a browser, you click approve, the api_key
+            saves to <code className="text-[var(--foreground)]">~/.config/trapstreet/auth.json</code>{" "}
+            automatically. No env var needed afterward.
+          </p>
+          <pre className="overflow-x-auto rounded bg-black/40 p-2 text-xs">
+            <code>tp login</code>
+          </pre>
+        </div>
+
+        <p className="mb-4 text-xs text-[var(--muted)]">
+          Or paste the <code className="text-[var(--foreground)]">api_key</code>{" "}
+          manually into your shell:
+          <br />
+          <code className="text-[var(--foreground)]">export TRAPSTREET_API_KEY=ts_...</code>
         </p>
 
         {yourRunners.length > 0 && (

@@ -213,6 +213,35 @@ export async function listRunnersByUser(userId: string) {
   return db.select().from(runners).where(eq(runners.user_id, userId));
 }
 
+// Used by /cli/authorize: returns this user's default runner identity
+// (used by `tp login`). If they have no runners yet, auto-creates one
+// named after them. We DON'T rotate the api_key on every login — login
+// is idempotent. To rotate, the user needs an explicit "rotate" action
+// in /settings (not built yet).
+export async function getOrCreateCliRunner(
+  userId: string,
+  displayName: string | null,
+): Promise<{ id: string; name: string; api_key: string }> {
+  const existing = await listRunnersByUser(userId);
+  if (existing.length > 0) {
+    const r = existing[0];
+    return { id: r.id, name: r.name, api_key: r.api_key };
+  }
+  const slug = (displayName || "user")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 20) || "user";
+  const idShort = userId.slice(-8).replace(/[^a-z0-9]/gi, "");
+  const name = `${slug}-${idShort}`;
+  const { runner, api_key } = await createRunner({
+    name,
+    endpoint_url: "https://trapstreet.run/cli",
+    user_id: userId,
+  });
+  return { id: runner.id, name: runner.name, api_key };
+}
+
 // -----------------------------------------------------------------------------
 // runs + cases
 

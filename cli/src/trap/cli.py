@@ -1,8 +1,16 @@
 from __future__ import annotations
 
+import http.server
 import json as _json
+import os
+import socket
+import socketserver
+import threading
+import time
 import urllib.error
+import urllib.parse
 import urllib.request
+import webbrowser
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -16,6 +24,51 @@ from trap.runner import TaskRunner
 
 app = typer.Typer(help="AI prompt / agent / workflow / testing framework.")
 console = Console()
+
+AUTH_FILE = Path.home() / ".config" / "trapstreet" / "auth.json"
+DEFAULT_SERVER = "https://trapstreet.run"
+
+
+# -----------------------------------------------------------------------------
+# auth helpers
+
+
+def _load_auth_file() -> dict[str, str]:
+    """Read ~/.config/trapstreet/auth.json or return empty dict."""
+    if not AUTH_FILE.exists():
+        return {}
+    try:
+        return _json.loads(AUTH_FILE.read_text())
+    except (OSError, _json.JSONDecodeError):
+        return {}
+
+
+def _save_auth_file(server: str, api_key: str, runner: str | None) -> Path:
+    AUTH_FILE.parent.mkdir(parents=True, exist_ok=True)
+    payload = {"server": server, "api_key": api_key}
+    if runner:
+        payload["runner"] = runner
+    AUTH_FILE.write_text(_json.dumps(payload, indent=2) + "\n")
+    AUTH_FILE.chmod(0o600)
+    return AUTH_FILE
+
+
+def _resolve_api_key(flag_or_env: str | None) -> str:
+    """Auth precedence: --api-key / TRAPSTREET_API_KEY > auth.json > error."""
+    if flag_or_env:
+        return flag_or_env
+    api_key = _load_auth_file().get("api_key")
+    if api_key:
+        return api_key
+    console.print(
+        "[red]not logged in[/red]. Run [bold]tp login[/bold] "
+        "or set [bold]TRAPSTREET_API_KEY[/bold] / pass [bold]--api-key[/bold]."
+    )
+    raise SystemExit(2)
+
+
+# -----------------------------------------------------------------------------
+# commands
 
 
 @app.command()
@@ -46,7 +99,9 @@ def run(
     )
     case_results, grader_metrics = runner.run(active_cases, fail_fast=fail_fast)
 
-    report_data = ReportSaver.save(trap_run_dir, case_results, task_obj, grader_metrics=grader_metrics)
+    report_data = ReportSaver.save(
+        trap_run_dir, case_results, task_obj, grader_metrics=grader_metrics
+    )
     renderer_factory(output).render(report_data)
 
     case_failed = any(cr.exit_code != 0 for cr in case_results)
@@ -71,6 +126,120 @@ def report(
 
 
 @app.command()
+def login(
+    server: str = typer.Option(
+        DEFAULT_SERVER,
+        "--server",
+        envvar="TRAPSTREET_URL",
+        help="Trapstreet server URL.",
+    ),
+    timeout: int = typer.Option(
+        300, "--timeout", help="Seconds to wait for browser approval."
+    ),
+) -> None:
+    """Open the browser to authorize this machine; save api_key locally.
+
+    Starts a temporary HTTP server on localhost, opens
+    <server>/cli/authorize?return=http://localhost:<port>/callback in your
+    browser, and waits for the redirect back with the api_key.
+
+    The token is saved to ~/.config/trapstreet/auth.json (mode 600).
+    Subsequent `tp submit` calls read from there automatically — no env
+    var needed (but TRAPSTREET_API_KEY still works as an override).
+    """
+    # Bind to an arbitrary free port on the loopback interface.
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        probe.bind(("127.0.0.1", 0))
+        port = probe.getsockname()[1]
+
+    captured: dict[str, str] = {}
+
+    class _CallbackHandler(http.server.BaseHTTPRequestHandler):
+        # Silence default access log
+        def log_message(self, *_args: Any) -> None:  # noqa: ARG002
+            return
+
+        def do_GET(self) -> None:  # noqa: N802
+            qs = urllib.parse.urlparse(self.path).query
+            params = urllib.parse.parse_qs(qs)
+            api_key = (params.get("api_key") or [None])[0]
+            runner_name = (params.get("runner") or [None])[0]
+
+            if api_key:
+                captured["api_key"] = api_key
+                if runner_name:
+                    captured["runner"] = runner_name
+                self.send_response(200)
+                self.send_header("content-type", "text/html; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(
+                    b"<!doctype html><meta charset=utf-8>"
+                    b"<title>logged in</title>"
+                    b"<style>body{font-family:ui-monospace,monospace;"
+                    b"background:#0a0a0a;color:#ededed;padding:3em;}"
+                    b"h1{color:#ff5f1f}</style>"
+                    b"<h1>logged in</h1>"
+                    b"<p>You can close this tab.</p>"
+                )
+            else:
+                self.send_response(400)
+                self.send_header("content-type", "text/plain")
+                self.end_headers()
+                self.wfile.write(b"missing api_key in query string")
+
+    server_obj = socketserver.TCPServer(("127.0.0.1", port), _CallbackHandler)
+    thread = threading.Thread(target=server_obj.serve_forever, daemon=True)
+    thread.start()
+
+    return_url = f"http://localhost:{port}/callback"
+    auth_url = (
+        f"{server.rstrip('/')}/cli/authorize"
+        f"?return={urllib.parse.quote(return_url, safe='')}"
+    )
+
+    console.print(f"opening [link={auth_url}]{auth_url}[/link]")
+    try:
+        webbrowser.open(auth_url)
+    except Exception:  # noqa: BLE001
+        # Couldn't open; user can copy/paste
+        console.print(
+            "[yellow]could not open browser automatically — "
+            "copy the URL above into a browser[/yellow]"
+        )
+
+    deadline = time.time() + timeout
+    while time.time() < deadline and "api_key" not in captured:
+        time.sleep(0.2)
+
+    server_obj.shutdown()
+    server_obj.server_close()
+
+    if "api_key" not in captured:
+        console.print(
+            f"[red]timed out after {timeout}s[/red] waiting for browser approval"
+        )
+        raise SystemExit(2)
+
+    path = _save_auth_file(server, captured["api_key"], captured.get("runner"))
+    runner_hint = (
+        f" · runner [bold]{captured.get('runner')}[/bold]"
+        if captured.get("runner")
+        else ""
+    )
+    console.print(f"[green]✓ logged in[/green]{runner_hint} · token saved to {path}")
+
+
+@app.command()
+def logout() -> None:
+    """Delete the locally-stored api_key."""
+    if AUTH_FILE.exists():
+        AUTH_FILE.unlink()
+        console.print(f"[green]✓[/green] removed {AUTH_FILE}")
+    else:
+        console.print(f"already logged out — no file at {AUTH_FILE}")
+
+
+@app.command()
 def submit(
     task: str | None = typer.Argument(
         None,
@@ -83,19 +252,29 @@ def submit(
         "latest", "--run", "-r", help="Which run to upload (default: latest)."
     ),
     server: str = typer.Option(
-        "https://trapstreet.run",
+        DEFAULT_SERVER,
         "--server",
         envvar="TRAPSTREET_URL",
         help="Trapstreet server URL.",
     ),
-    api_key: str = typer.Option(
-        ...,
+    api_key: str | None = typer.Option(
+        None,
         "--api-key",
         envvar="TRAPSTREET_API_KEY",
-        help="Runner api_key (or set TRAPSTREET_API_KEY).",
+        help="Runner api_key. Falls back to TRAPSTREET_API_KEY env, "
+        "then ~/.config/trapstreet/auth.json (see `tp login`).",
     ),
 ) -> None:
     """Upload the latest report.json to trapstreet."""
+    # Resolve api_key from flag > env > auth.json > error.
+    api_key = _resolve_api_key(api_key)
+
+    # If --server wasn't overridden but auth.json has one, prefer file's server.
+    if server == DEFAULT_SERVER and not os.environ.get("TRAPSTREET_URL"):
+        file_server = _load_auth_file().get("server")
+        if file_server:
+            server = file_server
+
     trap_yaml_loader = TrapLoader(trap_yaml_path)
     task_name = trap_yaml_loader.resolve_task(task).name
 
@@ -136,9 +315,7 @@ def submit(
     passed = run_obj.get("passed")
     view_url = body.get("view_url", "")
     status = "[green]✓ passed[/green]" if passed else "[red]✗ failed[/red]"
-    console.print(
-        f"{status} [bold]{run_id}[/bold] · score [cyan]{score}[/cyan]"
-    )
+    console.print(f"{status} [bold]{run_id}[/bold] · score [cyan]{score}[/cyan]")
     if view_url:
         console.print(f"  → [link={view_url}]{view_url}[/link]")
 

@@ -71,14 +71,19 @@ export default async function HomePage() {
 
           <li>
             <p className="mb-1 text-[var(--muted)]">
-              <span className="mr-2 text-[var(--accent)]">2.</span> Register a
-              runner from{" "}
-              <Link href="/settings">/settings</Link> → copy the{" "}
-              <code className="text-[var(--foreground)]">api_key</code>:
+              <span className="mr-2 text-[var(--accent)]">2.</span> Authorize
+              the CLI — opens a browser, click Approve, token saves locally:
             </p>
             <pre className="overflow-x-auto rounded border border-[var(--border)] bg-black/40 p-3 text-xs">
-              <code>export TRAPSTREET_API_KEY=ts_...</code>
+              <code>tp login</code>
             </pre>
+            <p className="mt-1 text-[11px] text-[var(--muted)]">
+              Or skip{" "}
+              <code className="text-[var(--foreground)]">tp login</code>{" "}
+              and{" "}
+              <code className="text-[var(--foreground)]">export TRAPSTREET_API_KEY=ts_...</code>{" "}
+              from <Link href="/settings">/settings</Link>.
+            </p>
           </li>
 
           <li>
