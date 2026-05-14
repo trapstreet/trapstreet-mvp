@@ -53,19 +53,46 @@ export default async function CliAuthorizePage({
 
   async function approve() {
     "use server";
+    // Module-scoped wrapper so we can log without catching NEXT_REDIRECT.
     const s = await auth();
+    console.log("[cli/authorize] approve start", {
+      hasUser: !!s?.user,
+      userId: s?.user?.id,
+      returnUrl,
+    });
     if (!s?.user) {
-      // shouldn't happen — page already guarded — but be defensive
       throw new Error("not signed in");
+    }
+    if (!s.user.id) {
+      throw new Error(
+        "session has no user.id — sign out and back in to refresh JWT",
+      );
     }
     if (!isLocalhostUrl(returnUrl)) {
       throw new Error("invalid return url");
     }
-    const runner = await getOrCreateCliRunner(s.user.id, s.user.name ?? s.user.email ?? "user");
+    let runner;
+    try {
+      runner = await getOrCreateCliRunner(
+        s.user.id,
+        s.user.name ?? s.user.email ?? "user",
+      );
+    } catch (e) {
+      console.error("[cli/authorize] getOrCreateCliRunner failed", {
+        userId: s.user.id,
+        userName: s.user.name,
+        error: e instanceof Error ? `${e.name}: ${e.message}` : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      });
+      throw e;
+    }
+    console.log("[cli/authorize] approve issuing api_key", {
+      runner: runner.name,
+    });
     const sep = returnUrl.includes("?") ? "&" : "?";
     redirect(
       `${returnUrl}${sep}api_key=${encodeURIComponent(runner.api_key)}` +
-      `&runner=${encodeURIComponent(runner.name)}`,
+        `&runner=${encodeURIComponent(runner.name)}`,
     );
   }
 
