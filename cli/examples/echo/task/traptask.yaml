@@ -29,7 +29,7 @@ cases:
     tags: [smoke]
 
 judge:
-  cmd: .venv/bin/python judge.py
+  cmd: uv run python judge.py
 
 grader:
-  cmd: .venv/bin/python grader.py
+  cmd: uv run python grader.py
