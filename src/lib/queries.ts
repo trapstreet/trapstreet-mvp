@@ -115,6 +115,22 @@ export async function createTask(input: {
   return row;
 }
 
+// Tasks owned by a specific user, for the /settings management list.
+// Includes both public and private tasks they created.
+export async function listTasksByUser(userId: string): Promise<TaskRow[]> {
+  return db
+    .select()
+    .from(tasks)
+    .where(eq(tasks.created_by, userId))
+    .orderBy(asc(tasks.id));
+}
+
+// Cascade FKs on runs/cases handle the rest. Caller must verify
+// ownership before calling — this is a raw delete.
+export async function deleteTask(id: string): Promise<void> {
+  await db.delete(tasks).where(eq(tasks.id, id));
+}
+
 // Best score (and run count) per task — for the task grid summary.
 export async function taskStats(): Promise<
   Map<string, { runs: number; best_score: number | null; best_runner: string | null }>

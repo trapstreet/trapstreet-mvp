@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { auth, signIn } from "@/auth";
-import { listRunnersByUser } from "@/lib/queries";
-import RunnerForm from "./RunnerForm";
+import { listRunnersByUser, listTasksByUser } from "@/lib/queries";
+import MyTasks from "./MyTasks";
 import { fmtDate } from "@/lib/format";
 
 export default async function SettingsPage() {
@@ -23,6 +23,7 @@ export default async function SettingsPage() {
   }
 
   const yourRunners = await listRunnersByUser(session.user.id);
+  const yourTasks = await listTasksByUser(session.user.id);
 
   return (
     <div className="max-w-2xl">
@@ -75,7 +76,6 @@ export default async function SettingsPage() {
               <thead>
                 <tr>
                   <th>name</th>
-                  <th>endpoint</th>
                   <th>created</th>
                 </tr>
               </thead>
@@ -83,9 +83,6 @@ export default async function SettingsPage() {
                 {yourRunners.map((r) => (
                   <tr key={r.id}>
                     <td>{r.name}</td>
-                    <td className="text-[var(--muted)] truncate max-w-[200px]">
-                      {r.endpoint_url}
-                    </td>
                     <td className="text-[var(--muted)]">
                       {fmtDate(r.created_at)}
                     </td>
@@ -98,8 +95,25 @@ export default async function SettingsPage() {
             </p>
           </div>
         )}
+      </section>
 
-        <RunnerForm />
+      <section>
+        <p className="mb-1 text-[10px] uppercase tracking-widest text-[var(--muted)]">
+          your tasks
+        </p>
+        <p className="mb-4 text-sm text-[var(--muted)]">
+          Tasks you created on trapstreet. Public tasks also show on the
+          home grid; private tasks are only visible to you. Delete removes
+          the task plus every run + case submitted against it.
+        </p>
+        <MyTasks
+          tasks={yourTasks.map((t) => ({
+            id: t.id,
+            name: t.name,
+            track: t.track,
+            visibility: t.visibility,
+          }))}
+        />
       </section>
     </div>
   );
