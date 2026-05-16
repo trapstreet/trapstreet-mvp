@@ -18,7 +18,6 @@ export interface PrefillResult {
   description: string;
   traptask_ref: string;
   rules_md: string;
-  io_md: string;
 }
 
 /**
@@ -116,25 +115,25 @@ export async function prefillFromGithub(input: string): Promise<{
     traptask_ref,
   };
 
-  // README: h1 → name, first paragraph → description, h2 sections → rules_md/io_md.
+  // README: h1 → name, first paragraph → description, rest of doc → rules_md.
+  // No more heuristic splitting — we tried classifying h2 sections into
+  // rules vs IO buckets but the README is a coherent doc and slicing it
+  // always landed something in the wrong place. The author writes one
+  // markdown blob; we preserve it.
   try {
     const readme = await ghFetchRaw(parsed, "README.md");
     if (readme) {
       const { h1, intro, sections } = splitReadmeIntoSections(readme);
       if (h1) out.name = h1;
       if (intro) out.description = intro.slice(0, 280);
-
-      const rulesSec = sections.filter((s) => classifySection(s.title) === "rules");
-      const ioSec = sections.filter((s) => classifySection(s.title) === "io");
-      if (rulesSec.length > 0) {
-        out.rules_md = rulesSec.map((s) => `## ${s.title}\n\n${s.body}`).join("\n\n");
-      }
-      if (ioSec.length > 0) {
-        out.io_md = ioSec.map((s) => `## ${s.title}\n\n${s.body}`).join("\n\n");
+      if (sections.length > 0) {
+        out.rules_md = sections
+          .map((s) => `## ${s.title}\n\n${s.body}`)
+          .join("\n\n");
       }
     }
   } catch {
-    // ignore — we just won't have a name/description/rules/io
+    // ignore — we just won't have a name/description/rules
   }
 
   // Fallbacks
@@ -190,27 +189,6 @@ function splitReadmeIntoSections(md: string): {
       .map((s) => ({ title: s.title, body: s.body.join("\n").trim() }))
       .filter((s) => s.body.length > 0),
   };
-}
-
-// Cheap heuristic: by section title, decide if a h2 is io/scoring/judging
-// (→ io_md) or anything else (→ rules_md). Defaults to rules.
-function classifySection(title: string): "io" | "rules" {
-  const t = title.toLowerCase();
-  const ioKeys = [
-    "input",
-    "output",
-    "score",
-    "scoring",
-    "judge",
-    "grader",
-    "grade",
-    "example",
-    "case",
-    "metric",
-    "check",
-    "verification",
-  ];
-  return ioKeys.some((k) => t.includes(k)) ? "io" : "rules";
 }
 
 function slugify(s: string): string {

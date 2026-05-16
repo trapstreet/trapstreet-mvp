@@ -17,6 +17,7 @@ export function TaskTabs({ taskId }: { taskId: string }) {
   const tabs: Tab[] = [
     { label: "leaderboard", href: base, exact: true },
     { label: "rules", href: `${base}/rules` },
+    { label: "cases", href: `${base}/cases` },
     { label: "forum", href: `${base}/forum` },
   ];
 

@@ -42,7 +42,8 @@ export async function POST(req: Request) {
   const ranking_metric = String(b.ranking_metric ?? "total_score") as RankingMetric;
   const ranking_direction = (b.ranking_direction === "asc" ? "asc" : "desc") as RankingDirection;
   const rules_md = String(b.rules_md ?? "");
-  const io_md = String(b.io_md ?? "");
+  // io_md was an experimental second textarea split out of the README;
+  // we abandoned the heuristic split. The column stays with default "".
   const visibility = (b.visibility === "private" ? "private" : "public") as TaskVisibility;
 
   // The 3 required fields. Everything else has a sensible default.
@@ -68,7 +69,7 @@ export async function POST(req: Request) {
     ranking_metric,
     ranking_direction,
     rules_md,
-    io_md,
+    io_md: "",
     visibility,
     created_by: session.user.id,
   });

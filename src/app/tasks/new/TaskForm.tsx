@@ -32,7 +32,6 @@ export default function TaskForm({
     ranking_metric: "total_score",
     ranking_direction: "desc" as "asc" | "desc",
     rules_md: "",
-    io_md: "",
     visibility: "public" as "public" | "private",
   });
 
@@ -54,10 +53,9 @@ export default function TaskForm({
         description: result.description ?? prev.description,
         traptask_ref: result.traptask_ref ?? prev.traptask_ref,
         rules_md: result.rules_md ?? prev.rules_md,
-        io_md: result.io_md ?? prev.io_md,
       }));
       // Expand the optional drawer so the user can see what we filled there.
-      if (result.rules_md || result.io_md) {
+      if (result.rules_md) {
         setShowOptional(true);
       }
       const filled = [
@@ -67,7 +65,6 @@ export default function TaskForm({
         "description",
         "traptask_ref",
         "rules_md",
-        "io_md",
       ]
         .filter((k) => result[k as keyof typeof result])
         .join(", ");
@@ -122,7 +119,7 @@ export default function TaskForm({
         </p>
         <p className="mb-3 text-xs text-[var(--muted)]">
           We&apos;ll parse the URL + read the repo&apos;s README to
-          prefill id, name, track, description, and traptask_ref. You
+          prefill id, name, track, description, traptask_ref, and rules. You
           review + tweak below.
         </p>
         <div className="flex gap-2">
@@ -256,16 +253,6 @@ export default function TaskForm({
               placeholder={"## Rules\n\n- Rule one\n- Rule two"}
               value={form.rules_md}
               onChange={(e) => set("rules_md", e.target.value)}
-              className="w-full rounded border border-[var(--border)] bg-transparent px-3 py-2 font-mono text-xs outline-none focus:border-[var(--accent)]"
-            />
-          </Row>
-
-          <Row label="inputs · outputs · scoring" hint="Markdown — concrete contract for one sample case">
-            <textarea
-              rows={8}
-              placeholder={"## Example case: `basic`\n\n### Input\n\n```\nhello\n```"}
-              value={form.io_md}
-              onChange={(e) => set("io_md", e.target.value)}
               className="w-full rounded border border-[var(--border)] bg-transparent px-3 py-2 font-mono text-xs outline-none focus:border-[var(--accent)]"
             />
           </Row>
