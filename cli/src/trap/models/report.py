@@ -57,15 +57,22 @@ class ReportData(BaseModel):
         started_at: datetime,
         finished_at: datetime,
         grader_metrics: Any = None,
+        auto_metadata: dict[str, Any] | None = None,
     ) -> ReportData:
         summary = _coerce_or_auto_summary(grader_metrics, cases)
+        # auto_metadata is computed by the CLI (currently: git remote URL).
+        # User-set keys in trap.yaml's metadata: block always win.
+        merged = {
+            **(auto_metadata or {}),
+            **(dict(task.metadata) if task.metadata else {}),
+        }
         return cls(
             task_id=task.name,
             cases=cases,
             summary=summary,
             started_at=_iso(started_at),
             finished_at=_iso(finished_at),
-            metadata=dict(task.metadata) if task.metadata else {},
+            metadata=merged,
         )
 
 

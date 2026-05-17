@@ -18,6 +18,7 @@ class ReportSaver:
         started_at: datetime,
         finished_at: datetime,
         grader_metrics: Any = None,
+        auto_metadata: dict[str, Any] | None = None,
     ) -> ReportData:
         data = ReportData.from_run(
             task=task,
@@ -25,6 +26,7 @@ class ReportSaver:
             started_at=started_at,
             finished_at=finished_at,
             grader_metrics=grader_metrics,
+            auto_metadata=auto_metadata,
         )
         (run_dir / _REPORT_FILENAME).write_text(data.model_dump_json(indent=2))
         return data

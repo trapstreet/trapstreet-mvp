@@ -18,6 +18,7 @@ from typing import Any
 import typer
 from rich.console import Console
 
+from trap.git_meta import detect_metadata
 from trap.loader import TrapLoader, TrapTaskLoader
 from trap.report import OutputFormat, ReportSaver, renderer_factory
 from trap.runner import TaskRunner
@@ -101,6 +102,11 @@ def run(
     case_results, grader_metrics = runner.run(active_cases, fail_fast=fail_fast)
     finished_at = datetime.now()
 
+    # Sniff the solution dir for a git remote so the leaderboard row
+    # gets a "↗ source" link automatically. trap.yaml metadata: block
+    # overrides any auto-detected key.
+    auto_metadata = detect_metadata(trap_yaml_loader.trap_dir)
+
     report_data = ReportSaver.save(
         run_dir=trap_run_dir,
         cases=case_results,
@@ -108,6 +114,7 @@ def run(
         started_at=started_at,
         finished_at=finished_at,
         grader_metrics=grader_metrics,
+        auto_metadata=auto_metadata,
     )
     renderer_factory(output).render(report_data)
 
