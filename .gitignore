@@ -6,6 +6,9 @@
 .idea/
 *.swp
 
+# ruff cache
+.ruff_cache/
+
 # Node
 node_modules/
 dist/
