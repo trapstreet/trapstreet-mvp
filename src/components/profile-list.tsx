@@ -15,13 +15,18 @@ import { fmtRelativeTime } from "@/lib/format";
 export type Direction = "asc" | "desc";
 
 interface Column {
-  // Dot-separated leaf path inside grader_metrics, e.g.
-  // "percentages.E_I.I" or "mbti_type".
+  // Dot-separated leaf path inside the merged metrics dict (e.g.
+  // "percentages.E_I.I", "mbti_type"). For axis_pair columns this is
+  // the PARENT path of the two leaves (e.g. "percentages.E_I").
   path: string;
   // Header label. Drops uninteresting namespace prefixes like
   // "percentages." for compactness.
   label: string;
-  type: "string" | "number" | "number_percent" | "boolean";
+  type: "string" | "number" | "number_percent" | "boolean" | "axis_pair";
+  // axis_pair only: two numeric sibling leaves whose values sum to ~100
+  // across all rows (E.g. E_I.E + E_I.I = 100). Rendered as a single
+  // diverging cell; sorting uses leftKey's value.
+  pair?: { leftKey: string; rightKey: string };
 }
 
 // Keys that are either already shown as denormalized columns above, or
@@ -113,10 +118,7 @@ export function ProfileList({
             </td>
             {columns.map((col) => (
               <td key={col.path}>
-                <MetricCell
-                  value={getPath(mergedMetrics(row), col.path)}
-                  type={col.type}
-                />
+                <MetricCell col={col} row={row} />
               </td>
             ))}
             <td className="text-[var(--muted)]">
@@ -162,19 +164,98 @@ function discoverColumns(entries: LeaderboardRow[]): Column[] {
       }
     });
   }
-  return [...paths.entries()]
-    .map(([path, example]) => ({
-      path,
-      label: shortenPath(path),
-      type: inferType(path, example),
-    }))
-    .sort(byLabelGroup);
+  const flat: Column[] = [...paths.entries()].map(([path, example]) => ({
+    path,
+    label: shortenPath(path),
+    type: inferType(path, example),
+  }));
+  // Collapse sibling numeric pairs that always sum to ~100 — e.g. for
+  // MBTI: percentages.E_I.E + percentages.E_I.I always = 100, so we
+  // render one combined axis cell instead of two redundant columns.
+  return collapseAxisPairs(flat, entries).sort(byLabelGroup);
 }
 
-// Group columns: strings first, booleans last, numbers in between (more
-// scannable that way — categorical lead, flags trail).
+// If two sibling leaves at the same parent path are both numeric AND
+// across every row their values sum to ~100, fold them into a single
+// "axis_pair" column. Generic — applies to any percentage-axis shape.
+function collapseAxisPairs(
+  columns: Column[],
+  rows: LeaderboardRow[],
+): Column[] {
+  // Group by parent path.
+  const byParent = new Map<string, Column[]>();
+  for (const c of columns) {
+    const dot = c.path.lastIndexOf(".");
+    if (dot < 0) continue;
+    if (c.type !== "number" && c.type !== "number_percent") continue;
+    const parent = c.path.slice(0, dot);
+    const group = byParent.get(parent) ?? [];
+    group.push(c);
+    byParent.set(parent, group);
+  }
+
+  const collapseable = new Map<
+    string,
+    { leftKey: string; rightKey: string }
+  >();
+  for (const [parent, children] of byParent) {
+    if (children.length !== 2) continue;
+    const [a, b] = children;
+    let sawSample = false;
+    let allSumTo100 = true;
+    for (const row of rows) {
+      const m = mergedMetrics(row);
+      const av = getPath(m, a.path);
+      const bv = getPath(m, b.path);
+      if (typeof av !== "number" || typeof bv !== "number") continue;
+      sawSample = true;
+      if (Math.abs(av + bv - 100) > 0.5) {
+        allSumTo100 = false;
+        break;
+      }
+    }
+    if (!sawSample || !allSumTo100) continue;
+    const aLeaf = a.path.slice(parent.length + 1);
+    const bLeaf = b.path.slice(parent.length + 1);
+    // Stable left/right order by leaf name (alphabetical).
+    const [leftKey, rightKey] =
+      aLeaf < bLeaf ? [aLeaf, bLeaf] : [bLeaf, aLeaf];
+    collapseable.set(parent, { leftKey, rightKey });
+  }
+
+  // Replace child columns with a single axis_pair column per parent.
+  const seen = new Set<string>();
+  const out: Column[] = [];
+  for (const c of columns) {
+    const dot = c.path.lastIndexOf(".");
+    const parent = dot < 0 ? "" : c.path.slice(0, dot);
+    if (parent && collapseable.has(parent)) {
+      if (!seen.has(parent)) {
+        out.push({
+          path: parent,
+          label: shortenPath(parent),
+          type: "axis_pair",
+          pair: collapseable.get(parent)!,
+        });
+        seen.add(parent);
+      }
+      continue;
+    }
+    out.push(c);
+  }
+  return out;
+}
+
+// Group columns: strings first, then axis pairs, then plain numbers,
+// booleans last. Categorical lead, flags trail.
 function byLabelGroup(a: Column, b: Column): number {
-  const order = { string: 0, number_percent: 1, number: 2, boolean: 3 } as const;
+  const order = {
+    string: 0,
+    axis_pair: 1,
+    number_percent: 2,
+    number: 3,
+    boolean: 4,
+  } as const;
   const ord = order[a.type] - order[b.type];
   if (ord !== 0) return ord;
   return a.label.localeCompare(b.label);
@@ -280,7 +361,13 @@ function SortHeader({
   activeDir: Direction;
   taskId: string;
 }) {
-  const active = col.path === activeSort;
+  // For axis_pair, we sort on the left leaf's value — the parent path
+  // itself points at an object so a direct comparison would degrade.
+  const sortPath =
+    col.type === "axis_pair" && col.pair
+      ? `${col.path}.${col.pair.leftKey}`
+      : col.path;
+  const active = sortPath === activeSort;
   // Natural default per type: numbers want desc (big first), strings want
   // asc (A→Z), submitted wants desc (newest first).
   const defaultDir: Direction =
@@ -295,7 +382,7 @@ function SortHeader({
     active && col.path === "scored_at" && nextDir === "desc";
   const href = goingBackToDefault
     ? `/tasks/${taskId}`
-    : `/tasks/${taskId}?sort=${encodeURIComponent(col.path)}&dir=${nextDir}`;
+    : `/tasks/${taskId}?sort=${encodeURIComponent(sortPath)}&dir=${nextDir}`;
   const arrow = active ? (activeDir === "desc" ? " ↓" : " ↑") : "";
   return (
     <th>
@@ -317,17 +404,22 @@ function SortHeader({
 
 // -- value cells -------------------------------------------------------------
 
-function MetricCell({
-  value,
-  type,
-}: {
-  value: unknown;
-  type: Column["type"];
-}) {
+function MetricCell({ col, row }: { col: Column; row: LeaderboardRow }) {
+  const merged = mergedMetrics(row);
+  if (col.type === "axis_pair" && col.pair) {
+    const left = getPath(merged, `${col.path}.${col.pair.leftKey}`);
+    const right = getPath(merged, `${col.path}.${col.pair.rightKey}`);
+    if (typeof left !== "number" || typeof right !== "number") {
+      return <span className="text-[var(--muted)]">—</span>;
+    }
+    return <AxisPairCell left={left} right={right} pair={col.pair} />;
+  }
+
+  const value = getPath(merged, col.path);
   if (value === null || value === undefined) {
     return <span className="text-[var(--muted)]">—</span>;
   }
-  switch (type) {
+  switch (col.type) {
     case "string":
       return (
         <span className="font-mono text-xs uppercase">{String(value)}</span>
@@ -353,6 +445,35 @@ function MetricCell({
         <span className="text-[var(--muted)]">—</span>
       );
   }
+}
+
+// Diverging cell for a 2-letter axis (E_I, S_N, T_F, J_P). Left letter
+// label + value, a centered bar showing the split, then right value +
+// right letter label. Bar fill represents the LEFT side's share.
+function AxisPairCell({
+  left,
+  right,
+  pair,
+}: {
+  left: number;
+  right: number;
+  pair: { leftKey: string; rightKey: string };
+}) {
+  const leftPct = Math.min(100, Math.max(0, left));
+  return (
+    <span className="inline-flex items-baseline gap-1 whitespace-nowrap text-xs">
+      <span className="text-[var(--muted)]">{pair.leftKey}</span>
+      <span className="w-6 text-right tabular-nums">{Math.round(left)}</span>
+      <span className="relative inline-block h-1 w-12 overflow-hidden rounded bg-[var(--border)]">
+        <span
+          className="absolute inset-y-0 left-0 bg-[var(--accent)]"
+          style={{ width: `${leftPct}%` }}
+        />
+      </span>
+      <span className="w-6 tabular-nums">{Math.round(right)}</span>
+      <span className="text-[var(--muted)]">{pair.rightKey}</span>
+    </span>
+  );
 }
 
 function NumberWithBar({ value }: { value: number }) {
