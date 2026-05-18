@@ -130,20 +130,65 @@ dependencies = []
 
 That's the task. Push the \`sum-task/\` folder up to a GitHub repo.
 
-## Step 5 — write the solution side
+## Step 5 — publish on trapstreet
 
-Now switch hats. As a runner, you make a different folder:
+Go to \`/tasks/new\`, paste your task's GitHub URL into the auto-fill
+field, review the prefilled values, hit Create. Now anyone with the
+\`tp\` CLI can write a solver against it.
 
-\`\`\`yaml
-# my-solution/trap.yaml
-tasks:
-  sum-two-numbers:                 # this name must match the task id on trapstreet
-    cmd: uv run python solve.py
-    traptask: ../sum-task          # path to your cloned task folder
-    inputs:
-      files: [nums.json]
-    file_outputs: [sum.json]
-\`\`\`
+When you create the task as **public**, trapstreet requires every
+submitted solution to have a publicly reachable git repo
+(\`metadata.repo\`) — see [build a solution](/docs/build-a-solution) for
+how that flows from the solver side.
+
+## What you didn't have to think about
+
+- Test runner orchestration — \`tp\` runs each case in its own
+  subprocess, captures stdout, handles timeouts, you don't write any
+  of that.
+- File paths — your judge / grader read \`TRAPTASK_PAYLOAD\` and never
+  deal with cwd or relative paths.
+- Result storage — \`.trap/sum-two-numbers/<ts>/report.json\` is
+  produced automatically, ready to upload.
+- Leaderboard columns, ranking, dedup — server picks well-known
+  metric names from what your grader emits (\`score\`, \`passed\`,
+  \`latency_ms_*\`, \`cost_usd_total\`) and renders columns. Zero
+  config needed; see [the reference](/docs/reference) when you want
+  something custom.
+
+## Gotchas worth remembering
+
+- **Case ids are folder names.** \`inputs/basic/\` and
+  \`expected/basic/\` must match exactly.
+- **judge.py output schema is yours.** Whatever JSON keys you print
+  flow through to \`runs.metrics\`; pick names you'll want to see on
+  the leaderboard.
+- **\`grader.py\` is optional.** Skip it unless you need a non-default
+  pass rule.
+
+| You write | Runs | Reads | Emits |
+|-----------|------|-------|-------|
+| \`judge.py\` | per case | \`TRAPTASK_PAYLOAD\` | JSON with at least \`score\` |
+| \`grader.py\` | once at the end | list of case metrics | JSON with at least \`passed\`, \`score\` |
+| (auto fallback) | once if no grader | case scores | averages, marks passed at ≥ 0.8 |
+`;
+
+export const BUILD_A_SOLUTION_MD = String.raw`
+We're going to write a solver for the \`sum-two-numbers\` task from
+[build a task](/docs/build-a-task). It hands you two ints, expects you
+back their sum. About 5 minutes once you have \`uv\` + \`tp\`.
+
+## What you're making
+
+A folder with two files:
+
+- **\`solve.py\`** — your program. Reads inputs, writes outputs.
+- **\`trap.yaml\`** — points at the task, declares which files come in
+  and go out.
+
+That's it. No framework code. \`tp run\` orchestrates each case for you.
+
+## Step 1 — write solve.py
 
 \`\`\`python
 # my-solution/solve.py
@@ -157,53 +202,79 @@ nums = json.loads(Path(inputs["nums.json"]).read_text())
 Path(outputs["sum.json"]).write_text(json.dumps({"sum": nums["a"] + nums["b"]}))
 \`\`\`
 
-Run it:
+Two env vars are everything:
+
+| Env var | What it holds | Example |
+|---------|---------------|---------|
+| \`INPUTS\` | JSON dict, \`filename → absolute path\` for case inputs | \`{"nums.json": "/tmp/.trap/.../inputs/basic/nums.json"}\` |
+| \`OUTPUTS\` | JSON dict, \`filename → absolute path\` for each declared file output | \`{"sum.json": "/tmp/.trap/.../basic/sum.json"}\` |
+
+You can also use stdin / stdout — \`tp\` captures both automatically.
+Many LLM solvers print the answer to stdout and let the task's judge
+parse it.
+
+## Step 2 — write trap.yaml
+
+\`\`\`yaml
+# my-solution/trap.yaml
+tasks:
+  sum-two-numbers:                 # must match the task id on trapstreet
+    cmd: uv run python solve.py
+    traptask: ../sum-task          # path to the cloned task folder
+    inputs:
+      files: [nums.json]
+    file_outputs: [sum.json]
+    metadata:
+      framework: stdlib-python
+      model: hand-written
+\`\`\`
+
+The \`metadata:\` block is self-reported and flows through to the
+leaderboard row. \`tp run\` auto-fills \`repo:\` from \`git remote\` if
+you've git-init'd the folder. For **public tasks**, trapstreet rejects
+your submission unless \`metadata.repo\` resolves to a publicly
+reachable GitHub URL — so push your solver first.
+
+## Step 3 — run it locally
 
 \`\`\`bash
 cd my-solution
 tp run
 \`\`\`
 
-All three cases should pass with score 1.0.
+\`uv\` builds a venv from your \`pyproject.toml\` (any will do, even an
+empty one), runs each case, runs the task's judge, prints a summary.
+All scores should be 1.0 on the basic / negatives / zero cases.
 
-## Step 6 — publish on trapstreet
-
-Go to \`/tasks/new\`, paste your task's GitHub URL into the auto-fill
-field, review the prefilled values, hit Create. Now anyone with the
-\`tp\` CLI can:
+## Step 4 — submit
 
 \`\`\`bash
-tp run && tp submit sum-two-numbers
+tp login                # one-time browser OAuth, see quick start
+tp submit sum-two-numbers
 \`\`\`
 
-…and their score lands on your task's leaderboard.
+The CLI prints a \`view_url\`. Click it; your row's on the leaderboard.
 
 ## What you didn't have to think about
 
-- Test runner orchestration — \`tp\` runs each case in its own
-  subprocess, captures stdout, handles timeouts, you don't write any
-  of that.
-- File paths — you read \`INPUTS\` / \`OUTPUTS\` / \`TRAPTASK_PAYLOAD\`
-  env vars and never deal with cwd or relative paths.
-- Result storage — \`.trap/sum-two-numbers/<ts>/report.json\` is
-  produced automatically, ready to upload.
-- Leaderboard columns, ranking, dedup — server picks well-known
-  metric names from what your grader emits (\`score\`, \`passed\`,
-  \`latency_ms_*\`, \`cost_usd_total\`) and renders columns. Zero
-  config needed; see [the reference](/docs/reference) when you want
-  something custom.
+- HTTP, auth, retries — \`tp submit\` handles it.
+- Per-case scoring — the task author already wrote \`judge.py\`. You
+  just hand back the right output.
+- Capturing stdout/stderr/latency/exit_code — \`tp\` records it all.
+- Submitting from the same machine you ran on — you can copy
+  \`.trap/<task>/<ts>/report.json\` anywhere and submit from there.
 
 ## Gotchas worth remembering
 
-- **Case ids are folder names.** \`inputs/basic/\` and
-  \`expected/basic/\` must match exactly.
-- **\`INPUTS\` / \`OUTPUTS\` keys are filenames, not paths.** Use
+- **\`INPUTS\` keys are filenames, not paths.** Use
   \`INPUTS["nums.json"]\`, not \`INPUTS["inputs/basic/nums.json"]\`.
-- **The task name must match in three places**: your trap.yaml's
-  top-level key, the trapstreet task id, and the argument you pass
-  to \`tp submit\`.
-- **Use \`uv run python ...\` in your cmd**, not
-  \`.venv/bin/python ...\`. The first runs in a venv that uv
-  auto-creates; the second only works if someone already set up
-  a venv.
+- **The task id must match in three places**: your trap.yaml's
+  top-level key, the trapstreet task id, and the argument to
+  \`tp submit\`.
+- **Use \`uv run python ...\` in your cmd**, not \`.venv/bin/python\`.
+  The first lets uv build the venv; the second only works after a
+  manual setup.
+- **Public tasks require a public repo.** Push your code to GitHub
+  before \`tp submit\` or it's rejected — \`tp run\` auto-detects the
+  remote URL into \`metadata.repo\`, or set it explicitly in trap.yaml.
 `;

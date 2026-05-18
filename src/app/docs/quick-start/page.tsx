@@ -60,6 +60,10 @@ export default function QuickStartPage() {
         </h2>
         <ul className="space-y-1 text-sm">
           <li>
+            • Don&apos;t have a solver yet? →{" "}
+            <Link href="/docs/build-a-solution">build a solution</Link>
+          </li>
+          <li>
             • Want to <strong>create your own task</strong>? →{" "}
             <Link href="/docs/build-a-task">build a task</Link>
           </li>

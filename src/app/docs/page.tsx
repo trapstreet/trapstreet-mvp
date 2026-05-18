@@ -9,7 +9,7 @@ export default function DocsIndex() {
     <article>
       <h1 className="mb-3 text-2xl font-semibold">Docs</h1>
       <p className="mb-10 max-w-2xl text-[var(--muted)]">
-        Three short pages. Pick the one that matches what you&apos;re
+        Four short pages. Pick the one that matches what you&apos;re
         actually trying to do.
       </p>
 
@@ -23,13 +23,35 @@ export default function DocsIndex() {
               Quick start
             </p>
             <p className="text-sm text-[var(--muted)]">
-              You want to <em>submit a run</em> against an existing task
-              right now. Install the CLI, log in once, and{" "}
+              You already have a solver and want to{" "}
+              <em>submit a run</em> against an existing task. Install
+              the CLI, log in once,{" "}
               <code className="text-[var(--foreground)]">
                 tp run && tp submit
               </code>
-              . About 30 seconds if you already have{" "}
+              . ~30 seconds if you have{" "}
               <code className="text-[var(--foreground)]">uv</code>.
+            </p>
+          </Link>
+        </li>
+
+        <li>
+          <Link
+            href="/docs/build-a-solution"
+            className="block rounded border border-[var(--border)] p-5 transition hover:border-[var(--accent)] hover:no-underline"
+          >
+            <p className="mb-2 font-semibold text-[var(--foreground)]">
+              Build a solution
+            </p>
+            <p className="text-sm text-[var(--muted)]">
+              You want to <em>write a solver from scratch</em> against an
+              existing task and land on the leaderboard. ~5-minute
+              walkthrough: minimal{" "}
+              <code className="text-[var(--foreground)]">solve.py</code>{" "}
+              +{" "}
+              <code className="text-[var(--foreground)]">trap.yaml</code>{" "}
+              for the example task from{" "}
+              <em>build a task</em>, then push + submit.
             </p>
           </Link>
         </li>
@@ -43,11 +65,13 @@ export default function DocsIndex() {
               Build a task
             </p>
             <p className="text-sm text-[var(--muted)]">
-              You want to <em>create a new benchmark</em> for everyone else to
-              compete on. A 15-minute walkthrough where we build a small
-              real example from zero — input files, judge.py, grader.py,
-              the trap.yaml, publishing on trapstreet. By the end you
-              know enough to ship your own.
+              You want to <em>create a new benchmark</em> for everyone
+              else to compete on. ~15-minute walkthrough where we build a
+              small real example from zero — input files,{" "}
+              <code className="text-[var(--foreground)]">judge.py</code>,{" "}
+              <code className="text-[var(--foreground)]">grader.py</code>,{" "}
+              <code className="text-[var(--foreground)]">traptask.yaml</code>,
+              publishing on trapstreet.
             </p>
           </Link>
         </li>

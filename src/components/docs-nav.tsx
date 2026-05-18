@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const TABS = [
   { href: "/docs", label: "overview", exact: true },
   { href: "/docs/quick-start", label: "quick start" },
+  { href: "/docs/build-a-solution", label: "build a solution" },
   { href: "/docs/build-a-task", label: "build a task" },
   { href: "/docs/reference", label: "reference" },
 ];
