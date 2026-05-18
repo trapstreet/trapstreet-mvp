@@ -132,12 +132,20 @@ export async function deleteTask(id: string): Promise<void> {
 }
 
 // Best score (and run count) per task — for the task grid summary.
-export async function taskStats(): Promise<
-  Map<string, { runs: number; best_score: number | null; best_runner: string | null }>
-> {
+// best_runner_id is included so the home grid can link the world-record
+// row directly to /runners/<id>.
+export interface TaskStat {
+  runs: number;
+  best_score: number | null;
+  best_runner: string | null;
+  best_runner_id: string | null;
+}
+
+export async function taskStats(): Promise<Map<string, TaskStat>> {
   const rows = await db
     .select({
       task_id: runs.task_id,
+      runner_id: runs.runner_id,
       runner_name: runners.name,
       total_score: runs.total_score,
     })
@@ -145,15 +153,13 @@ export async function taskStats(): Promise<
     .innerJoin(runners, eq(runners.id, runs.runner_id))
     .where(eq(runs.status, "scored"));
 
-  const map = new Map<
-    string,
-    { runs: number; best_score: number | null; best_runner: string | null }
-  >();
+  const map = new Map<string, TaskStat>();
   for (const r of rows) {
     const cur = map.get(r.task_id) ?? {
       runs: 0,
       best_score: null,
       best_runner: null,
+      best_runner_id: null,
     };
     cur.runs += 1;
     if (
@@ -162,10 +168,33 @@ export async function taskStats(): Promise<
     ) {
       cur.best_score = r.total_score;
       cur.best_runner = r.runner_name;
+      cur.best_runner_id = r.runner_id;
     }
     map.set(r.task_id, cur);
   }
   return map;
+}
+
+// Minimal lookup for the /users/[id] profile page.
+export interface UserRow {
+  id: string;
+  name: string | null;
+  email: string | null;
+  image: string | null;
+}
+
+export async function userById(id: string): Promise<UserRow | null> {
+  const rows = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      image: users.image,
+    })
+    .from(users)
+    .where(eq(users.id, id))
+    .limit(1);
+  return rows[0] ?? null;
 }
 
 // -----------------------------------------------------------------------------

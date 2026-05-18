@@ -85,14 +85,18 @@ tp run && tp submit               # in any task's solution dir`}
                 : "trapstreet";
               return (
                 <li key={t.id}>
-                  <Link
-                    href={`/tasks/${t.id}`}
-                    className="block rounded border border-[var(--border)] p-4 transition hover:border-[var(--accent)] hover:no-underline"
-                  >
+                  {/* Stretched-link card. The title <Link> spans the
+                      whole card via before:absolute, so the author /
+                      world-record links can sit on top with z-10 and
+                      stay clickable without nesting <a> tags. */}
+                  <div className="group relative rounded border border-[var(--border)] p-4 transition hover:border-[var(--accent)]">
                     <div className="mb-1 flex items-baseline justify-between gap-3">
-                      <span className="font-semibold text-[var(--foreground)]">
+                      <Link
+                        href={`/tasks/${t.id}`}
+                        className="font-semibold text-[var(--foreground)] hover:no-underline before:absolute before:inset-0 before:rounded"
+                      >
                         {t.name}
-                      </span>
+                      </Link>
                       <span className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-[var(--muted)]">
                         {t.visibility === "private" && (
                           <span className="rounded border border-[var(--border)] px-1 normal-case tracking-normal">
@@ -110,9 +114,18 @@ tp run && tp submit               # in any task's solution dir`}
                     <div className="flex items-baseline justify-between text-xs">
                       <span className="text-[var(--muted)]">
                         by{" "}
-                        <span className="text-[var(--foreground)]">
-                          {author}
-                        </span>{" "}
+                        {t.created_by ? (
+                          <Link
+                            href={`/users/${t.created_by}`}
+                            className="relative z-10 text-[var(--foreground)]"
+                          >
+                            {author}
+                          </Link>
+                        ) : (
+                          <span className="text-[var(--foreground)]">
+                            {author}
+                          </span>
+                        )}{" "}
                         · {s?.runs ?? 0} run{(s?.runs ?? 0) === 1 ? "" : "s"}
                       </span>
                       {s?.best_runner && (
@@ -122,13 +135,22 @@ tp run && tp submit               # in any task's solution dir`}
                             {fmtScore(s.best_score)}
                           </span>
                           <span className="text-[var(--muted)]"> by </span>
-                          <span className="text-[var(--foreground)]">
-                            {s.best_runner}
-                          </span>
+                          {s.best_runner_id ? (
+                            <Link
+                              href={`/runners/${s.best_runner_id}`}
+                              className="relative z-10 text-[var(--foreground)]"
+                            >
+                              {s.best_runner}
+                            </Link>
+                          ) : (
+                            <span className="text-[var(--foreground)]">
+                              {s.best_runner}
+                            </span>
+                          )}
                         </span>
                       )}
                     </div>
-                  </Link>
+                  </div>
                 </li>
               );
             })}
