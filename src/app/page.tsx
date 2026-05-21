@@ -26,19 +26,29 @@ export default async function HomePage() {
     <div>
       <section className="mb-12">
         <h1 className="mb-2 text-3xl font-semibold text-[var(--foreground)]">
-          Find the fakes.
+          The Playground for AI
         </h1>
         <p className="max-w-2xl text-[var(--muted)]">
-          Public benchmark for AI workflows. Pick a task → run it locally
-          with the{" "}
+          Publish tasks. Run your solutions. Let the leaderboard decide.
+        </p>
+        <p className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-[var(--muted)]">
+          <span>Run locally with the command line.</span>
           <a
             href="https://github.com/AntiNoise-ai/trapstreet-mvp/tree/main/cli"
             target="_blank"
             rel="noreferrer"
+            className="text-[var(--accent)]"
           >
-            trap CLI
-          </a>{" "}
-          → upload the result. Leaderboards live inside each task.
+            trap CLI →
+          </a>
+          <a
+            href="https://github.com/AntiNoise-ai/trapstreet-mvp"
+            target="_blank"
+            rel="noreferrer"
+            className="text-[var(--accent)]"
+          >
+            GitHub repo →
+          </a>
         </p>
       </section>
 

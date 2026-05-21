@@ -4,8 +4,9 @@ import "./globals.css";
 import { HeaderAuth } from "@/components/auth-actions";
 
 export const metadata: Metadata = {
-  title: "Trap Street — public benchmark for AI workflows",
-  description: "Find the fakes. Run real evals. Share the results.",
+  title: "Trapstreet.run — The Playground for AI",
+  description:
+    "Publish tasks. Run your solutions. Let the leaderboard decide.",
 };
 
 // Public nav — same for everyone. Account-related actions (new task,
@@ -28,10 +29,7 @@ export default function RootLayout({
               href="/"
               className="text-base font-semibold tracking-wide text-[var(--foreground)] hover:no-underline"
             >
-              <span className="text-[var(--accent)]">▢</span> trap street
-              <span className="ml-2 text-[10px] uppercase tracking-widest text-[var(--muted)]">
-                v0 — mvp
-              </span>
+              <span className="text-[var(--accent)]">▢</span> Trapstreet.run
             </Link>
             <nav className="flex flex-wrap items-center gap-5 text-[13px]">
               {NAV.map((n) => (
