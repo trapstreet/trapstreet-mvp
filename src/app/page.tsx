@@ -44,10 +44,10 @@ export default async function HomePage() {
         </p>
       </section>
 
-      {/* ─── Quick start ─────────────────────────────────────────────── */}
-      <section className="mb-12 rounded border border-[var(--border)] p-5">
-        <div className="mb-3 flex items-baseline justify-between">
-          <h2 className="text-sm uppercase tracking-widest text-[var(--muted)]">
+      {/* ─── Install trap CLI ────────────────────────────────────────── */}
+      <section className="mb-12">
+        <div className="mb-4 flex items-baseline justify-between border-b border-[var(--border)] pb-1">
+          <h2 className="text-sm uppercase tracking-widest text-[var(--foreground)]">
             Install trap CLI
           </h2>
           <a
@@ -75,6 +75,17 @@ tp run && tp submit               # in any task's solution dir`}
       </section>
 
       {/* ─── Task grid ───────────────────────────────────────────────── */}
+      <section className="mb-10">
+        <div className="mb-4 flex items-baseline justify-between border-b border-[var(--border)] pb-1">
+          <h2 className="text-sm uppercase tracking-widest text-[var(--foreground)]">
+            Browse Tasks
+          </h2>
+          <span className="text-xs text-[var(--muted)]">
+            {[...byTrack.values()].reduce((sum, list) => sum + list.length, 0)} tasks
+          </span>
+        </div>
+      </section>
+
       {[...byTrack.entries()].map(([track, list]) => (
         <section key={track} className="mb-10">
           <div className="mb-4 flex items-baseline justify-between border-b border-[var(--border)] pb-1">
