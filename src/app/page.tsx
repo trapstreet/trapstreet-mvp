@@ -65,12 +65,13 @@ tp login                          # one-time, opens browser
 tp run && tp submit               # in any task's solution dir`}
         />
 
-        <p className="mt-3 text-xs text-[var(--muted)]">
-          Don&apos;t have <a href="https://docs.astral.sh/uv/" target="_blank" rel="noreferrer">uv</a> yet?{" "}
-          <code className="text-[var(--foreground)]">curl -LsSf https://astral.sh/uv/install.sh | sh</code>.
-          Full walkthrough — including how to build your own task —{" "}
-          <Link href="/docs">in the docs</Link>.
-        </p>
+        <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2 text-xs text-[var(--muted)]">
+          <p>
+            Don&apos;t have <a href="https://docs.astral.sh/uv/" target="_blank" rel="noreferrer">uv</a> yet?{" "}
+            <code className="text-[var(--foreground)]">curl -LsSf https://astral.sh/uv/install.sh | sh</code>.
+          </p>
+          <Link href="/docs">Full walkthrough →</Link>
+        </div>
       </section>
 
       {/* ─── Task grid ───────────────────────────────────────────────── */}
