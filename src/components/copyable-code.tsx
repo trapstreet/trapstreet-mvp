@@ -23,7 +23,7 @@ export function CopyableCode({ code }: { code: string }) {
 
   return (
     <div className="group relative">
-      <pre className="overflow-x-auto rounded border border-[var(--border)] bg-black/40 p-4 pr-16 text-xs">
+      <pre className="overflow-x-auto rounded border border-[var(--border)] bg-black/40 p-5 pr-20 text-sm leading-7 md:text-[15px]">
         <code>{code}</code>
       </pre>
       <button
@@ -31,7 +31,7 @@ export function CopyableCode({ code }: { code: string }) {
         onClick={copy}
         aria-label="copy to clipboard"
         className={
-          "absolute right-2 top-2 rounded border px-2 py-1 text-[10px] uppercase tracking-widest transition " +
+          "absolute right-3 top-3 rounded border px-2.5 py-1 text-[11px] uppercase tracking-widest transition " +
           (copied
             ? "border-[var(--accent)] text-[var(--accent)]"
             : "border-[var(--border)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]")

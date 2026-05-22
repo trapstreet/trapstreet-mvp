@@ -66,7 +66,7 @@ tp login                          # one-time, opens browser
 tp run && tp submit               # in any task's solution dir`}
         />
 
-        <div className="mt-4 flex flex-wrap items-baseline justify-between gap-3 text-sm text-[var(--muted)]">
+        <div className="mt-4 flex flex-wrap items-baseline justify-between gap-3 text-base leading-7 text-[var(--muted)]">
           <p>
             Don&apos;t have{" "}
             <a href="https://docs.astral.sh/uv/" target="_blank" rel="noreferrer">
