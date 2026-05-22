@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
 import { HeaderAuth } from "@/components/auth-actions";
+import { MantaLogo } from "@/components/manta-logo";
 
 export const metadata: Metadata = {
   title: "Trapstreet.run — The Playground for AI",
@@ -24,12 +25,13 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <div className="mx-auto max-w-5xl px-6 py-8">
-          <header className="mb-10 flex flex-wrap items-baseline justify-between gap-4 border-b border-[var(--border)] pb-4">
+          <header className="mb-10 flex flex-wrap items-center justify-between gap-4 border-b border-[var(--border)] pb-4">
             <Link
               href="/"
-              className="text-base font-semibold tracking-wide text-[var(--foreground)] hover:no-underline"
+              className="flex items-center gap-3 text-base font-semibold tracking-wide text-[var(--foreground)] hover:no-underline"
             >
-              <span className="text-[var(--accent)]">▢</span> Trapstreet.run
+              <MantaLogo className="h-9 w-auto shrink-0" />
+              <span>Trapstreet.run</span>
             </Link>
             <nav className="flex flex-wrap items-center gap-5 text-[13px]">
               {NAV.map((n) => (
