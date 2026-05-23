@@ -1,6 +1,7 @@
 import {
   authSolution,
   getTask,
+  resolveSubmitSolution,
   submitRun,
   type CliUpload,
 } from "@/lib/queries";
@@ -63,9 +64,21 @@ export async function POST(
     }
   }
 
+  // Route the run to the right solution under the authenticated user:
+  // - body.solution set → lookup-or-create that named solution
+  // - body.solution absent → auto-pick the next `<user-slug>-<n>`
+  const requestedName =
+    typeof (body as { solution?: unknown }).solution === "string"
+      ? ((body as { solution?: string }).solution as string).trim() || null
+      : null;
+  const target = await resolveSubmitSolution(
+    { id: solution.id, user_id: solution.user_id },
+    requestedName,
+  );
+
   const run = await submitRun({
     task_id,
-    solution_id: solution.id,
+    solution_id: target.id,
     payload: body as CliUpload,
   });
   if (!run) return ERR.internal("submission failed");
@@ -100,6 +113,21 @@ function validate(body: unknown): { error: string | null } {
   // metadata is optional but if present must be an object
   if (b.metadata !== undefined && (b.metadata === null || typeof b.metadata !== "object")) {
     return { error: "metadata must be an object when present" };
+  }
+
+  // solution is optional; when present must be a non-empty string that
+  // fits the same shape we accept for auto-generated names.
+  if (b.solution !== undefined) {
+    if (typeof b.solution !== "string") {
+      return { error: "solution must be a string when present" };
+    }
+    const s = b.solution.trim();
+    if (s && !/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$/.test(s)) {
+      return {
+        error:
+          "solution name must be 1-64 chars, alphanumerics plus . _ - (no spaces)",
+      };
+    }
   }
 
   return { error: null };

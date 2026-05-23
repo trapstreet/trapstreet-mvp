@@ -342,6 +342,65 @@ async function pickAvailableSolutionName(slug: string): Promise<string> {
   return `${slug}-${Date.now()}`;
 }
 
+function userDisplaySlug(name: string | null | undefined): string {
+  return (
+    (name || "user")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 24) || "user"
+  );
+}
+
+// Routes a submission to the right solution for the authenticated user.
+// - requestedName set → lookup-or-create a solution named that under
+//   anchor.user_id (lets one human run multiple named agents).
+// - requestedName null → auto-pick the next `<user-slug>-<n>` and
+//   create a fresh solution. Each unnamed submit lands as its own row.
+//
+// Anchor = the solution the api_key authenticated as (the api_key
+// belongs to a single solution, but the user owning it can have many).
+// If anchor has no user_id (legacy anonymous registration), we can't
+// multi-route — fall back to anchor.
+export async function resolveSubmitSolution(
+  anchor: { id: string; user_id: string | null },
+  requestedName: string | null,
+): Promise<{ id: string }> {
+  if (!anchor.user_id) return { id: anchor.id };
+
+  if (requestedName) {
+    const existing = await db
+      .select({ id: solutions.id })
+      .from(solutions)
+      .where(
+        and(
+          eq(solutions.user_id, anchor.user_id),
+          eq(solutions.name, requestedName),
+        ),
+      )
+      .limit(1);
+    if (existing.length > 0) return { id: existing[0].id };
+    const { solution } = await createSolution({
+      name: requestedName,
+      endpoint_url: "https://trapstreet.run/cli",
+      user_id: anchor.user_id,
+    });
+    return { id: solution.id };
+  }
+
+  // Auto-name: derive slug from the user's display name and pick the
+  // next free numeric suffix. Each unnamed submit gets its own row.
+  const user = await userById(anchor.user_id);
+  const slug = userDisplaySlug(user?.name);
+  const name = await pickAvailableSolutionName(slug);
+  const { solution } = await createSolution({
+    name,
+    endpoint_url: "https://trapstreet.run/cli",
+    user_id: anchor.user_id,
+  });
+  return { id: solution.id };
+}
+
 // -----------------------------------------------------------------------------
 // runs + cases
 
@@ -416,6 +475,12 @@ export interface CliUpload {
   started_at?: string;      // ISO 8601, CLI wall-clock
   finished_at?: string;     // ISO 8601, CLI wall-clock
   metadata?: Record<string, unknown>;
+  // Leaderboard identity. Set in trap.yaml `solution:` field. When
+  // present, server creates/reuses a solution with this name under the
+  // authenticated user. When absent, server auto-assigns a serial
+  // name (`<user-slug>-<n>`), so each unnamed submit lands as its own
+  // leaderboard row.
+  solution?: string;
 }
 
 // Server-side fallback summary when the report doesn't include one

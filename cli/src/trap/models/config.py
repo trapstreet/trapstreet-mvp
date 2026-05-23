@@ -32,3 +32,11 @@ class Task(BaseModel):
     # report.json's `metadata` field for the leaderboard's "Solution metadata"
     # panel. See trapstreet/docs/scoring-and-metrics.md.
     metadata: dict[str, Any] = {}
+    # Optional leaderboard identity. When set, `tp submit` will create
+    # this solution on first upload (or reuse it on subsequent uploads)
+    # under the authenticated user — letting one human run multiple
+    # named agents in parallel (e.g. "claude-sonnet-baseline" vs
+    # "gpt-5-baseline"). When omitted, the server auto-assigns a
+    # serialised name like `<user-slug>-<n>`, so each submit lands as
+    # its own row on the leaderboard.
+    solution: str | None = None

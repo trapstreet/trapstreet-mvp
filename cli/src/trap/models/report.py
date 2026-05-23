@@ -50,7 +50,7 @@ class Summary(BaseModel):
 
 
 class ReportData(BaseModel):
-    """5 top-level keys, matching the upload protocol."""
+    """Top-level upload protocol envelope."""
 
     task_id: str
     cases: tuple[CaseResult, ...]
@@ -58,6 +58,10 @@ class ReportData(BaseModel):
     started_at: str
     finished_at: str
     metadata: dict[str, Any] = {}
+    # Solution identity for this submission. None → server auto-assigns
+    # a serial name like `<user-slug>-<n>`. Set → server creates/reuses
+    # a solution with this name under the authenticated user.
+    solution: str | None = None
 
     @classmethod
     def from_run(
@@ -83,6 +87,7 @@ class ReportData(BaseModel):
             started_at=_iso(started_at),
             finished_at=_iso(finished_at),
             metadata=merged,
+            solution=task.solution,
         )
 
 
