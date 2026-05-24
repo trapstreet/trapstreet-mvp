@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from rich import box
 from rich.console import Console
+from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
@@ -31,7 +32,13 @@ class RichRenderer(BaseRenderer):
             if pct > 0:
                 return f"[bold yellow]{pct:.0f}%[/bold yellow]"
             return f"[bold red]{pct:.0f}%[/bold red]"
-        return str(value)
+        # Bracket characters in user-supplied content (judge metric values,
+        # grader outputs, etc.) would otherwise be interpreted as Rich
+        # markup and crash with MarkupError on mismatched tags. e.g. a judge
+        # emitting a regex pattern like "[/\\-]" raises:
+        #     MarkupError: closing tag '[/\\-]' doesn't match any open tag
+        # Escape so brackets render as literal text.
+        return escape(str(value))
 
     @staticmethod
     def _render_status(result: CaseResult) -> tuple[str, str]:
@@ -50,10 +57,10 @@ class RichRenderer(BaseRenderer):
         table.add_column("status", justify="center")
         table.add_column("time", justify="right", style="dim")
         for key in metrics_keys:
-            table.add_column(f"# {key}", justify="right", header_style="bold cyan")
+            table.add_column(f"# {escape(key)}", justify="right", header_style="bold cyan")
         for result in data.cases:
             label, style = self._render_status(result)
-            row = [result.case_id, f"[{style}]{label}[/{style}]", f"{result.duration:.3f}s"]
+            row = [escape(result.case_id), f"[{style}]{label}[/{style}]", f"{result.duration:.3f}s"]
             for key in metrics_keys:
                 value = result.metrics.get(key) if result.metrics else None
                 row.append(self._render_metric_cell(value))
@@ -85,7 +92,7 @@ class RichRenderer(BaseRenderer):
         for k in ("n_passed", "n_total", "n_skipped"):
             summary_dump.pop(k, None)
         if summary_dump:
-            parts = [self._render_metric_cell(v) + f" {k}" for k, v in summary_dump.items()]
+            parts = [self._render_metric_cell(v) + f" {escape(k)}" for k, v in summary_dump.items()]
             rows.append(("summary", Text.from_markup("  ".join(parts))))
 
         grid = Table.grid(padding=(0, 2))
