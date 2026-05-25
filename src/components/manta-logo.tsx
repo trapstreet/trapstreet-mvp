@@ -7,7 +7,7 @@ export function MantaLogo({ className = "" }: MantaLogoProps) {
     <img
       alt=""
       className={className}
-      src="/trapstreet-manta-outline.png"
+      src="/trapstreet-manta-filled.png"
     />
   );
 }
