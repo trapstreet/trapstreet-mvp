@@ -296,7 +296,7 @@ export async function ensureUserRow(
 }
 
 // Used by /cli/authorize: returns this user's default solution identity
-// (used by `tp login`). If they have no solutions yet, auto-creates one
+// (used by `tp auth login`). If they have no solutions yet, auto-creates one
 // named after them. We DON'T rotate the api_key on every login — login
 // is idempotent. To rotate, the user needs an explicit "rotate" action
 // in /settings (not built yet).
@@ -611,7 +611,7 @@ export type LeaderboardRow = {
   rank: number;
   solution_id: string;
   // The submission identity (what we call "solution" in the UI). Set by
-  // the user via `tp login` / solution registration — defaults to an
+  // the user via `tp auth login` / solution registration — defaults to an
   // auto-generated handle.
   solution_name: string;
   // GitHub/Google display name of the human who owns the solution. Shown

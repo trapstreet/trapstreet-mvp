@@ -59,7 +59,7 @@ export default async function HomePage() {
 
         <CopyableCode
           code={`uv tool install trapstreet-cli   # one-time
-tp login                          # one-time, opens browser
+tp auth login                     # one-time, opens browser
 tp run && tp submit               # in any task's solution dir`}
         />
 

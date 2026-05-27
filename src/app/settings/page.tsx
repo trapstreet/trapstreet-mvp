@@ -50,13 +50,13 @@ export default async function SettingsPage() {
             recommended · auto login
           </p>
           <p className="mb-3 text-[var(--muted)]">
-            Easiest path — run <code className="text-[var(--foreground)]">tp login</code>{" "}
+            Easiest path — run <code className="text-[var(--foreground)]">tp auth login</code>{" "}
             and the CLI will pop a browser, you click approve, the api_key
             saves to <code className="text-[var(--foreground)]">~/.config/trapstreet/auth.json</code>{" "}
             automatically. No env var needed afterward.
           </p>
           <pre className="overflow-x-auto rounded bg-black/40 p-2 text-xs">
-            <code>tp login</code>
+            <code>tp auth login</code>
           </pre>
         </div>
 

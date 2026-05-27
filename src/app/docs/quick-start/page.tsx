@@ -34,7 +34,11 @@ export default function QuickStartPage() {
           </code>
           .
         </p>
-        <CopyableCode code="tp login" />
+        <CopyableCode code="tp auth login" />
+        <p className="mt-2 text-xs text-[var(--muted)]">
+          Verify with{" "}
+          <code className="text-[var(--foreground)]">tp auth status</code>.
+        </p>
       </section>
 
       <section className="mb-8">

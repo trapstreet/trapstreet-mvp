@@ -4,7 +4,7 @@ import { ensureUserRow, getOrCreateCliSolution } from "@/lib/queries";
 
 // /cli/authorize?return=http://localhost:<port>/callback
 //
-// The `tp login` CLI command starts a localhost server, opens this
+// The `tp auth login` CLI command starts a localhost server, opens this
 // page in the user's browser, and waits for us to redirect back with
 // an api_key in the query string. Loopback OAuth-style flow.
 //

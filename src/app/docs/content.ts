@@ -249,7 +249,7 @@ All scores should be 1.0 on the basic / negatives / zero cases.
 ## Step 4 — submit
 
 \`\`\`bash
-tp login                # one-time browser OAuth, see quick start
+tp auth login           # one-time browser OAuth, see quick start
 tp submit sum-two-numbers
 \`\`\`
 

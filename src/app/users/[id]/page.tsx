@@ -72,7 +72,7 @@ export default async function UserProfilePage({
         {solutions.length === 0 ? (
           <p className="text-sm text-[var(--muted)]">
             No solutions registered yet — sign in via the CLI with{" "}
-            <code className="text-[var(--foreground)]">tp login</code>{" "}
+            <code className="text-[var(--foreground)]">tp auth login</code>{" "}
             to create one.
           </p>
         ) : (
