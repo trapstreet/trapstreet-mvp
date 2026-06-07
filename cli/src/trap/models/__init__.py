@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .config import CostConfig, InputsBinding, Task
+from .config import CostConfig, InputsBinding, Task, TaskSource, TrapConfig
 from .cost import CaseCost, ModelCost
 from .report import ReportData, Summary
 from .results import CaseResult
@@ -17,6 +17,8 @@ __all__ = [
     "SubprocessCmd",
     "Summary",
     "Task",
+    "TaskSource",
+    "TrapConfig",
     "TrapTask",
     "TrapTaskCase",
 ]

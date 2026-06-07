@@ -1,7 +1,8 @@
 tasks:
   test:
     cmd: uv run solution.py
-    traptask: ../task
+    traptask:
+      local: ../task
     inputs:
       files:
         - question.txt

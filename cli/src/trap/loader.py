@@ -1,15 +1,14 @@
 # Loads trap.yaml and traptask.yaml into their respective loader classes.
 from __future__ import annotations
 
+import subprocess
 from collections.abc import Iterable
 from pathlib import Path
 
 import yaml
-from pydantic import TypeAdapter
 
 from trap.models import Task, TrapTask, TrapTaskCase
-
-_tasks_adapter: TypeAdapter[dict[str, Task]] = TypeAdapter(dict[str, Task])
+from trap.models.config import TrapConfig
 
 
 class TrapLoader:
@@ -18,9 +17,9 @@ class TrapLoader:
     def __init__(self, trap_yaml_path: Path) -> None:
         self.trap_dir: Path = trap_yaml_path.resolve().parent
         data = yaml.safe_load(trap_yaml_path.read_text())
-        raw = _tasks_adapter.validate_python(data["tasks"])
+        config = TrapConfig.model_validate(data)
         self.tasks: dict[str, Task] = {
-            name: task.model_copy(update={"name": name}) for name, task in raw.items()
+            name: task.model_copy(update={"name": name}) for name, task in config.tasks.items()
         }
 
     def select_task(self, name: str) -> Task:
@@ -59,8 +58,21 @@ class TrapTaskLoader:
 
     @classmethod
     def from_task(cls, task: Task, trap_dir: Path) -> TrapTaskLoader:
-        """Resolve traptask.yaml from a Task's directory path and the trap.yaml directory."""
-        traptask_dir = (trap_dir / task.traptask).resolve()
+        """Resolve traptask.yaml from a Task's traptask field and the trap.yaml directory."""
+        from trap.git_ops import GitRepo
+
+        source = task.traptask
+        if source.remote is not None:
+            # local given → clone there; omitted → git_ops caches under .trap/repos/<repo>
+            explicit_path = str(source.local) if source.local is not None else None
+            repo = GitRepo(source.remote, explicit_path, trap_dir)
+            is_local_changed = repo.ensure()
+            if is_local_changed and source.init_cmd:
+                # raises subprocess.CalledProcessError on non-zero exit
+                subprocess.run(source.init_cmd, shell=True, cwd=repo.local_dir, check=True)
+            traptask_dir = repo.local_dir
+        else:
+            traptask_dir = (trap_dir / (source.local or Path("../task"))).resolve()
         return cls(traptask_dir / "traptask.yaml")
 
     @property

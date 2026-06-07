@@ -4,7 +4,8 @@ tasks:
   echo:
     description: Echo solution — reads stdin JSON and writes it back to stdout
     cmd: uv run python echo.py
-    traptask: ../task
+    traptask:
+      local: ../task
     inputs:
       stdin: input.json
     # See word-count's trap.yaml for what this is.
@@ -14,6 +15,7 @@ tasks:
 
   run:
     cmd: uv run python echo.py
-    traptask: ../task
+    traptask:
+      local: ../task
     inputs:
       stdin: input.json

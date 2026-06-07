@@ -28,7 +28,10 @@ stdout and stderr are always captured automatically.
 tasks:
   test:
     cmd: uv run python solution.py
-    traptask: ../task            # path to task directory; trap loads ../task/traptask.yaml
+    traptask:                    # task source (flat object; bare strings no longer accepted)
+      local: ../task             # local task dir; `traptask: {}` defaults to ../task
+      # remote: git+https://github.com/org/repo@rev#subdirectory=X  # optional: clone this into local
+      # init_cmd: uv sync        # optional: run after a clone / fast-forward
     inputs:
       stdin: input.txt           # optional: pipe this file as stdin
       files:                     # optional: validate these filenames exist before running
@@ -41,7 +44,8 @@ tasks:
 
   run:                           # second task; same traptask, different cmd or inputs
     cmd: uv run python solution.py
-    traptask: ../task
+    traptask:
+      local: ../task
     inputs:
       stdin: input.txt
     file_outputs:
@@ -149,7 +153,8 @@ pricing table (e.g. Mistral models), token counts are tracked but `cost_usd` is 
 tasks:
   test:
     cmd: uv run python solution.py
-    traptask: ../task
+    traptask:
+      local: ../task
     cost:
       enabled: false   # omit to auto-detect from env
 ```
