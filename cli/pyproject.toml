@@ -55,6 +55,11 @@ source = "vcs"
 [tool.hatch.version.raw-options]
 root = ".."
 tag_regex = "^cli-v(?P<version>.+)$"
+# `git describe` must also be told to only consider cli-v* tags, otherwise it
+# picks the nearest tag of any kind (e.g. the monorepo-wide `mvp-v1.0.0`) and
+# then fails to parse it against tag_regex. tag_regex alone only parses; this
+# restricts which tags are candidates.
+git_describe_command = "git describe --dirty --tags --long --match cli-v*"
 fallback_version = "0.0.0.dev0"
 
 [tool.hatch.build.hooks.vcs]
