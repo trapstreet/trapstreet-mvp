@@ -29,7 +29,7 @@ class RevStrategy(ABC):
         """Fresh clone of repo_url into dest, positioned at the desired rev."""
 
     @abstractmethod
-    def reconcile(self, repo: git.Repo, root: Path, progress: ProgressCallback) -> bool:
+    def reconcile(self, repo: git.Repo, root: Path, progress_func: ProgressCallback) -> bool:
         """Verify/update an existing clone (remote already validated).
 
         Returns True if local code changed (caller then re-runs init_cmd).
@@ -42,7 +42,7 @@ class DefaultBranch(RevStrategy):
     def clone(self, repo_url: str, dest: Path) -> None:
         git.Repo.clone_from(repo_url, dest)
 
-    def reconcile(self, repo: git.Repo, root: Path, progress: ProgressCallback) -> bool:
+    def reconcile(self, repo: git.Repo, root: Path, progress_func: ProgressCallback) -> bool:
         return False
 
 
@@ -56,7 +56,7 @@ class PinnedSha(RevStrategy):
         repo = git.Repo.clone_from(repo_url, dest)
         repo.git.checkout(self.sha)
 
-    def reconcile(self, repo: git.Repo, root: Path, progress: ProgressCallback) -> bool:
+    def reconcile(self, repo: git.Repo, root: Path, progress_func: ProgressCallback) -> bool:
         head_sha = repo.head.commit.hexsha
         if not head_sha.startswith(self.sha):
             raise GitOpsError(
@@ -75,11 +75,11 @@ class NamedRef(RevStrategy):
     def clone(self, repo_url: str, dest: Path) -> None:
         git.Repo.clone_from(repo_url, dest, branch=self.ref, single_branch=True)
 
-    def reconcile(self, repo: git.Repo, root: Path, progress: ProgressCallback) -> bool:
+    def reconcile(self, repo: git.Repo, root: Path, progress_func: ProgressCallback) -> bool:
         head_sha = repo.head.commit.hexsha
 
-        if progress:
-            progress(f"fetching {root.name}...")
+        if progress_func:
+            progress_func(f"fetching {root.name}...")
         try:
             repo.remotes.origin.fetch()
         except git.GitCommandError as exc:
@@ -97,8 +97,8 @@ class NamedRef(RevStrategy):
                 f"  HEAD:         {head_sha[:8]}"
             )
 
-        if progress:
-            progress(f"updating {root.name} to {self.ref} ({declared_sha[:8]})...")
+        if progress_func:
+            progress_func(f"updating {root.name} to {self.ref} ({declared_sha[:8]})...")
         try:
             repo.git.pull("--ff-only", "origin", self.ref)
         except git.GitCommandError as exc:

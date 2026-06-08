@@ -39,3 +39,19 @@ class ParsedGitUrl:
         """https://github.com/org/my-task.git  →  my-task"""
         name = self.repo.rstrip("/").rsplit("/", 1)[-1]
         return re.sub(r"\.git$", "", name)
+
+
+def normalise_remote(url: str) -> str:
+    """Canonicalise a git remote URL into a clickable https URL.
+
+    git@github.com:user/repo.git   → https://github.com/user/repo
+    https://github.com/u/r.git     → https://github.com/u/r
+    ssh://git@gitlab.com/u/r       → https://gitlab.com/u/r
+    """
+    m = re.match(r"^git@([^:]+):(.+?)(?:\.git)?$", url)  # git@host:path/to/repo(.git)
+    if m:
+        return f"https://{m.group(1)}/{m.group(2)}"
+    m = re.match(r"^ssh://git@([^/]+)/(.+?)(?:\.git)?$", url)  # ssh:// form
+    if m:
+        return f"https://{m.group(1)}/{m.group(2)}"
+    return re.sub(r"\.git$", "", url)  # https/http: drop trailing .git

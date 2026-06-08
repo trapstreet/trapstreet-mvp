@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Annotated
@@ -11,7 +12,7 @@ from rich.console import Console
 from trap.auth import DEFAULT_SERVER, ApiClient, AuthStore
 from trap.cli._auth import auth_app
 from trap.display import CaseProgress, render_submit_result
-from trap.git_meta import detect_metadata
+from trap.git_ops import GitOpsError, read_provenance
 from trap.loader import TrapLoader, TrapTaskLoader
 from trap.report import OutputFormat, ReportHandle, renderer_factory
 from trap.runner import TaskRunner
@@ -21,20 +22,47 @@ app.add_typer(auth_app, name="auth")
 console = Console()
 
 
+def _die(msg: object) -> typer.Exit:
+    """Print an error and return an Exit(2) to raise."""
+    console.print(f"[red]error[/red]: {msg}")
+    return typer.Exit(code=2)
+
+
 @app.command()
 def run(
     task: Annotated[str | None, typer.Argument()] = None,
-    trap_yaml_path: Annotated[Path, typer.Option("--config", "-c")] = Path("trap.yaml"),
+    solution: Annotated[
+        str | None,
+        typer.Option("--solution", help="Solution to run: a local path or a git+ URL (default: cwd)."),
+    ] = None,
+    clone_to: Annotated[
+        Path | None,
+        typer.Option("--clone-to", help="Where to clone a git+ URL --solution (default: ./<repo>)."),
+    ] = None,
     tags: Annotated[list[str] | None, typer.Option("--tag", "-t")] = None,
     output: Annotated[OutputFormat, typer.Option("--output", "-o")] = OutputFormat.rich,
     fail_fast: Annotated[bool, typer.Option("--fail-fast")] = False,
     workspace: Annotated[Path, typer.Option("--workspace", "-w")] = Path(".trap"),
 ) -> None:
-    """Run a task against a solution."""
-    trap_yaml_loader = TrapLoader(trap_yaml_path)
-    task_obj = trap_yaml_loader.resolve_task(task)
+    """Run a task against a solution.
 
-    task_yaml_loader = TrapTaskLoader.from_task(task_obj, trap_yaml_loader.trap_dir)
+    --solution is the solution to run: a local path, or a git+ URL to clone
+    into ./<repo> (or --clone-to). Omit it to use the trap.yaml in the cwd.
+    """
+    try:
+        trap_yaml_loader = TrapLoader.from_solution(
+            solution,
+            clone_to,
+            allow_remote=True,
+            progress_func=(
+                (lambda m: console.print(f"[dim]{m}[/dim]")) if output == OutputFormat.rich else None
+            ),
+        )
+        task_obj = trap_yaml_loader.resolve_task(task)
+        task_yaml_loader = TrapTaskLoader.from_task(task_obj, trap_yaml_loader.trap_dir)
+    except (GitOpsError, subprocess.CalledProcessError) as e:
+        raise _die(e) from None
+
     active_cases = task_yaml_loader.cases_with_tags(tags or [])
 
     started_at = datetime.now()
@@ -58,10 +86,10 @@ def run(
         )
     finished_at = datetime.now()
 
-    # Sniff the solution dir for a git remote so the leaderboard row
-    # gets a "↗ source" link automatically. trap.yaml metadata: block
-    # overrides any auto-detected key.
-    auto_metadata = detect_metadata(trap_yaml_loader.trap_dir)
+    # Record git provenance (repo + commit) of the solution checkout so the
+    # report is reproducible. Only set for a clean git checkout with a remote;
+    # the trap.yaml metadata: block overrides any auto-detected key.
+    auto_metadata = read_provenance(trap_yaml_loader.trap_dir)
 
     report_data = report_handle.save(
         cases=case_results,
@@ -81,13 +109,18 @@ def run(
 def report(
     task: Annotated[str | None, typer.Argument()] = None,
     run: Annotated[str, typer.Argument()] = "latest",
-    trap_yaml_path: Annotated[Path, typer.Option("--config", "-c")] = Path("trap.yaml"),
+    solution: Annotated[
+        str | None,
+        typer.Option("--solution", help="Local solution path holding trap.yaml (default: cwd)."),
+    ] = None,
     output: Annotated[OutputFormat, typer.Option("--output", "-o")] = OutputFormat.rich,
     workspace: Annotated[Path, typer.Option("--workspace", "-w")] = Path(".trap"),
 ) -> None:
     """Display a report for a task (defaults to latest run)."""
-    trap_yaml_loader = TrapLoader(trap_yaml_path)
-    task_name = trap_yaml_loader.resolve_task(task).name
+    try:
+        task_name = TrapLoader.from_solution(solution).resolve_task(task).name
+    except GitOpsError as e:
+        raise _die(e) from None
     report_data = ReportHandle(workspace.resolve(), task_name, run).load()
     renderer_factory(output).render(report_data)
 
@@ -101,7 +134,10 @@ def submit(
             "Used as both the local run dir and the trapstreet task_id.",
         ),
     ] = None,
-    trap_yaml_path: Annotated[Path, typer.Option("--config", "-c")] = Path("trap.yaml"),
+    solution: Annotated[
+        str | None,
+        typer.Option("--solution", help="Local solution path holding trap.yaml (default: cwd)."),
+    ] = None,
     workspace: Annotated[Path, typer.Option("--workspace", "-w")] = Path(".trap"),
     run: Annotated[str, typer.Option("--run", "-r", help="Which run to upload.")] = "latest",
     report: Annotated[
@@ -151,13 +187,17 @@ def submit(
         task_name = task
         report_path = report
     else:
-        task_name = TrapLoader(trap_yaml_path).resolve_task(task).name
+        try:
+            task_name = TrapLoader.from_solution(solution).resolve_task(task).name
+        except GitOpsError as e:
+            raise _die(e) from None
         report_handle = ReportHandle(workspace.resolve(), task_name, run)
         try:
             report_handle.assert_exists()
         except FileNotFoundError:
             console.print(
-                f"[red]error[/red]: no report at {report_handle.report_json_path}. Run [bold]tp run[/bold] first."
+                f"[red]error[/red]: no report at {report_handle.report_json_path}. "
+                "Run [bold]tp run[/bold] first."
             )
             raise typer.Exit(code=2) from None
         report_path = report_handle.report_json_path
