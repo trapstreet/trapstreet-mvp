@@ -8,16 +8,55 @@ from trap.git_ops.base import GitOpsError
 
 @dataclass(frozen=True)
 class ParsedGitUrl:
-    repo: str  # plain HTTPS URL (no git+ prefix, no @rev, no #fragment)
+    """A git URL split into its parts, for cloning a task/solution repo.
+
+    A user writes one string (in trap.yaml or `--solution`); this pulls it apart
+    into the URL to clone, an optional pinned rev, and an optional sub-path.
+
+        git+https://github.com/org/repo@v1.0#subdirectory=tasks/a
+        └──────── repo ───────┘ └rev┘ └──── subdirectory ────┘
+    """
+
+    repo: str  # the underlying git URL (git+ prefix stripped, no @rev, no #fragment)
     rev: str | None  # branch / tag / SHA; None = default branch
     subdirectory: str | None  # sub-path inside the repo; None = root
 
+    @staticmethod
+    def looks_remote(s: str) -> bool:
+        """True if `s` is a git remote URL (vs a local path).
+
+        A `scheme://…` URL (git+https, https, ssh, git, file) or scp shorthand
+        `user@host:path`. Local paths (./x, ../task, /abs, foo) have neither.
+        """
+        return "://" in s or bool(re.match(r"^[^/@]+@[^/:]+:", s))
+
     @classmethod
     def from_full_url(cls, url: str) -> ParsedGitUrl:
-        """Parse git+https://host/org/repo@rev#subdirectory=X forms."""
-        if not url.startswith("git+"):
-            raise GitOpsError(f"not a git+ URL: {url!r}")
-        rest = url[4:]
+        """Parse a git URL into (repo, rev, subdirectory).
+
+        Accepts any of these base forms — the `git+` prefix is optional:
+
+            git+https://github.com/org/repo
+            https://github.com/org/repo.git
+            ssh://git@github.com/org/repo
+            git@github.com:org/repo.git          (scp shorthand)
+            file:///path/to/repo
+
+        Two optional suffixes work on every form:
+
+            @<rev>             pin a branch / tag / commit
+            #subdirectory=<p>  sub-path inside the repo holding the trap config
+
+        Example:
+
+            git+https://github.com/org/repo@v1.0#subdirectory=tasks/a
+            → repo="https://github.com/org/repo", rev="v1.0", subdirectory="tasks/a"
+
+        Raises GitOpsError if `url` is not a remote URL (see `looks_remote`).
+        """
+        if not cls.looks_remote(url):
+            raise GitOpsError(f"not a git URL: {url!r}")
+        rest = url[4:] if url.startswith("git+") else url
 
         subdirectory: str | None = None
         if "#" in rest:
@@ -40,18 +79,18 @@ class ParsedGitUrl:
         name = self.repo.rstrip("/").rsplit("/", 1)[-1]
         return re.sub(r"\.git$", "", name)
 
+    @property
+    def normalised_url(self) -> str:
+        """`repo` as a canonical clickable https URL.
 
-def normalise_remote(url: str) -> str:
-    """Canonicalise a git remote URL into a clickable https URL.
-
-    git@github.com:user/repo.git   → https://github.com/user/repo
-    https://github.com/u/r.git     → https://github.com/u/r
-    ssh://git@gitlab.com/u/r       → https://gitlab.com/u/r
-    """
-    m = re.match(r"^git@([^:]+):(.+?)(?:\.git)?$", url)  # git@host:path/to/repo(.git)
-    if m:
-        return f"https://{m.group(1)}/{m.group(2)}"
-    m = re.match(r"^ssh://git@([^/]+)/(.+?)(?:\.git)?$", url)  # ssh:// form
-    if m:
-        return f"https://{m.group(1)}/{m.group(2)}"
-    return re.sub(r"\.git$", "", url)  # https/http: drop trailing .git
+        git@github.com:user/repo.git   → https://github.com/user/repo
+        ssh://git@gitlab.com/u/r       → https://gitlab.com/u/r
+        https://github.com/u/r.git     → https://github.com/u/r
+        """
+        m = re.match(r"^git@([^:]+):(.+?)(?:\.git)?$", self.repo)  # scp git@host:path
+        if m:
+            return f"https://{m.group(1)}/{m.group(2)}"
+        m = re.match(r"^ssh://git@([^/]+)/(.+?)(?:\.git)?$", self.repo)  # ssh:// form
+        if m:
+            return f"https://{m.group(1)}/{m.group(2)}"
+        return re.sub(r"\.git$", "", self.repo)  # https/http: drop trailing .git

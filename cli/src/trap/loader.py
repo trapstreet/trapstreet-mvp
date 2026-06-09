@@ -53,17 +53,17 @@ class TrapLoader:
         cwd = Path.cwd()
         if solution is None:
             return cls(cwd / "trap.yaml")
-        if solution.startswith("git+"):
+        if ParsedGitUrl.looks_remote(solution):
             if not allow_remote:
-                raise GitOpsError("solution must be a local path here, not a git+ URL")
+                raise GitOpsError("solution must be a local path here, not a remote URL")
             parsed = ParsedGitUrl.from_full_url(solution)
             # clone_to given → there; omitted → visible ./<repo>
             dest = clone_to or Path(parsed.basename)
             repo = GitRepo(parsed, (cwd / dest).resolve())
             repo.ensure(progress_func=progress_func)
-            return cls(repo.local_dir / "trap.yaml")
+            return cls(repo.repo_local_dir / "trap.yaml")
         if clone_to is not None:
-            raise GitOpsError("--clone-to only applies to a git+ URL solution")
+            raise GitOpsError("--clone-to only applies to a remote (git URL) solution")
         return cls(cwd / solution / "trap.yaml")
 
 
@@ -104,8 +104,8 @@ class TrapTaskLoader:
             is_local_changed = repo.ensure()
             if is_local_changed and source.init_cmd:
                 # raises subprocess.CalledProcessError on non-zero exit
-                subprocess.run(source.init_cmd, shell=True, cwd=repo.local_dir, check=True)
-            traptask_dir = repo.local_dir
+                subprocess.run(source.init_cmd, shell=True, cwd=repo.repo_local_dir, check=True)
+            traptask_dir = repo.repo_local_dir
         else:
             traptask_dir = (trap_dir / (source.local or Path("../task"))).resolve()
         return cls(traptask_dir / "traptask.yaml")

@@ -5,7 +5,7 @@ from typing import Any
 
 import git
 
-from trap.git_ops.url import normalise_remote
+from trap.git_ops.url import ParsedGitUrl
 
 
 def read_provenance(checkout_dir: Path) -> dict[str, Any]:
@@ -29,4 +29,4 @@ def read_provenance(checkout_dir: Path) -> dict[str, Any]:
         return {}  # no `origin` remote
     if not repo.head.is_valid() or repo.is_dirty():
         return {}
-    return {"repo": normalise_remote(url), "commit": repo.head.commit.hexsha}
+    return {"repo": ParsedGitUrl.from_full_url(url).normalised_url, "commit": repo.head.commit.hexsha}

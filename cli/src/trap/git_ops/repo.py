@@ -6,7 +6,7 @@ import git
 
 from trap.git_ops.base import GitOpsError, ProgressCallback
 from trap.git_ops.rev import RevStrategy
-from trap.git_ops.url import ParsedGitUrl, normalise_remote
+from trap.git_ops.url import ParsedGitUrl
 
 
 class GitRepo:
@@ -21,14 +21,14 @@ class GitRepo:
     def __init__(self, parsed: ParsedGitUrl, root: Path) -> None:
         self.parsed = parsed
         self.strategy = RevStrategy.for_rev(parsed.rev)
-        self.root = root
+        self.repo_root = root
 
     @property
-    def local_dir(self) -> Path:
+    def repo_local_dir(self) -> Path:
         """Clone root, descended into the requested subdirectory if any."""
         if self.parsed.subdirectory:
-            return self.root / self.parsed.subdirectory
-        return self.root
+            return self.repo_root / self.parsed.subdirectory
+        return self.repo_root
 
     def ensure(self, progress_func: ProgressCallback = None) -> bool:
         """Clone (fresh) or sync (existing) the repo into `root`.
@@ -36,14 +36,14 @@ class GitRepo:
         Returns True when code changed (fresh clone OR branch fast-forwarded) —
         callers run init_cmd only then.  Read `local_dir` for the resolved path.
         """
-        return self._sync(progress_func) if self.root.exists() else self._clone(progress_func)
+        return self._sync(progress_func) if self.repo_root.exists() else self._clone(progress_func)
 
     def _clone(self, progress_func: ProgressCallback) -> bool:
         """Fresh clone — common scaffolding here; rev-specific clone via the strategy."""
         if progress_func:
-            progress_func(f"cloning {self.parsed.repo} → {self.root}")
+            progress_func(f"cloning {self.parsed.repo} → {self.repo_root}")
         try:
-            self.strategy.clone(self.parsed.repo, self.root)
+            self.strategy.clone(self.parsed.repo, self.repo_root)
         except git.GitCommandError as exc:
             raise GitOpsError(f"git clone failed:\n{exc.stderr.strip()}") from exc
         return True
@@ -51,13 +51,15 @@ class GitRepo:
     def _sync(self, progress_func: ProgressCallback) -> bool:
         """Existing clone — validate remote here; rev-specific update via the strategy."""
         try:
-            repo = git.Repo(self.root)
+            repo = git.Repo(self.repo_root)
         except git.InvalidGitRepositoryError as exc:
-            raise GitOpsError(f"{self.root} is not a git repository") from exc
+            raise GitOpsError(f"{self.repo_root} is not a git repository") from exc
 
-        actual = normalise_remote(repo.remotes.origin.url)
-        expected = normalise_remote(self.parsed.repo)
+        actual = ParsedGitUrl.from_full_url(repo.remotes.origin.url).normalised_url
+        expected = self.parsed.normalised_url
         if actual != expected:
-            raise GitOpsError(f"repo mismatch at {self.root}:\n  declared: {expected}\n  found:    {actual}")
+            raise GitOpsError(
+                f"repo mismatch at {self.repo_root}:\n  declared: {expected}\n  found:    {actual}"
+            )
 
-        return self.strategy.reconcile(repo, self.root, progress_func)
+        return self.strategy.reconcile(repo, self.repo_root, progress_func)
