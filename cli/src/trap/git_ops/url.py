@@ -40,7 +40,9 @@ class ParsedGitUrl:
             https://github.com/org/repo.git
             ssh://git@github.com/org/repo
             git@github.com:org/repo.git          (scp shorthand)
-            file:///path/to/repo
+
+        (Any `scheme://` works, so `file:///path/to/repo` also clones a local
+        repo — handy for tests/pinning, distinct from an in-place local path.)
 
         Two optional suffixes work on every form:
 

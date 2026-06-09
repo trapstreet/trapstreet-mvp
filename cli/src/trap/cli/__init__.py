@@ -12,7 +12,7 @@ from rich.console import Console
 from trap.auth import DEFAULT_SERVER, ApiClient, AuthStore
 from trap.cli._auth import auth_app
 from trap.display import CaseProgress, render_submit_result
-from trap.git_ops import GitOpsError, read_provenance
+from trap.git_ops import GitOpsError, LocalRepo
 from trap.loader import TrapLoader, TrapTaskLoader
 from trap.report import OutputFormat, ReportHandle, renderer_factory
 from trap.runner import TaskRunner
@@ -89,7 +89,7 @@ def run(
     # Record git provenance (repo + commit) of the solution checkout so the
     # report is reproducible. Only set for a clean git checkout with a remote;
     # the trap.yaml metadata: block overrides any auto-detected key.
-    auto_metadata = read_provenance(trap_yaml_loader.trap_dir)
+    auto_metadata = LocalRepo.provenance_of(trap_yaml_loader.trap_dir)
 
     report_data = report_handle.save(
         cases=case_results,

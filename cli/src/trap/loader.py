@@ -48,7 +48,7 @@ class TrapLoader:
         trap.yaml.  Raises GitOpsError on a git failure or a bad spec/flag
         combo (caller maps it to a CLI error).
         """
-        from trap.git_ops import GitOpsError, GitRepo, ParsedGitUrl
+        from trap.git_ops import GitOpsError, ParsedGitUrl, RemoteRepo
 
         cwd = Path.cwd()
         if solution is None:
@@ -59,9 +59,9 @@ class TrapLoader:
             parsed = ParsedGitUrl.from_full_url(solution)
             # clone_to given → there; omitted → visible ./<repo>
             dest = clone_to or Path(parsed.basename)
-            repo = GitRepo(parsed, (cwd / dest).resolve())
-            repo.ensure(progress_func=progress_func)
-            return cls(repo.repo_local_dir / "trap.yaml")
+            remote_repo = RemoteRepo(parsed, (cwd / dest).resolve())
+            remote_repo.ensure(progress_func=progress_func)
+            return cls(remote_repo.local_dir / "trap.yaml")
         if clone_to is not None:
             raise GitOpsError("--clone-to only applies to a remote (git URL) solution")
         return cls(cwd / solution / "trap.yaml")
@@ -93,19 +93,19 @@ class TrapTaskLoader:
     @classmethod
     def from_task(cls, task: Task, trap_dir: Path) -> TrapTaskLoader:
         """Resolve traptask.yaml from a Task's traptask field and the trap.yaml directory."""
-        from trap.git_ops import GitRepo, ParsedGitUrl
+        from trap.git_ops import ParsedGitUrl, RemoteRepo
 
         source = task.traptask
         if source.remote is not None:
             parsed = ParsedGitUrl.from_full_url(source.remote)
             # local given → clone there; omitted → hidden cache .trap/repos/<repo>
             dest = source.local or Path(".trap") / "repos" / parsed.basename
-            repo = GitRepo(parsed, (trap_dir / dest).resolve())
-            is_local_changed = repo.ensure()
+            remote_repo = RemoteRepo(parsed, (trap_dir / dest).resolve())
+            is_local_changed = remote_repo.ensure()
             if is_local_changed and source.init_cmd:
                 # raises subprocess.CalledProcessError on non-zero exit
-                subprocess.run(source.init_cmd, shell=True, cwd=repo.repo_local_dir, check=True)
-            traptask_dir = repo.repo_local_dir
+                subprocess.run(source.init_cmd, shell=True, cwd=remote_repo.local_dir, check=True)
+            traptask_dir = remote_repo.local_dir
         else:
             traptask_dir = (trap_dir / (source.local or Path("../task"))).resolve()
         return cls(traptask_dir / "traptask.yaml")

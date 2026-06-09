@@ -27,7 +27,7 @@ traptask: "git+https://...#subdirectory=tasks/a"    # 远程 + subdir
 ```
 
 - 字符串以 `git+` 开头 → 远程,clone 到**隐藏缓存** `.trap/repos/<repo>`(task 是依赖);否则当本地路径(相对 trap.yaml),省略默认 `../task`。
-- 复用同一 `GitRepo`;已存在缓存照样校验 origin/rev(rev 钉在 URL 的 `@rev` 里)。
+- 复用同一 `RemoteRepo`;已存在缓存照样校验 origin/rev(rev 钉在 URL 的 `@rev` 里)。
 - **删除 `TaskSource` 模型**:`Task.traptask: str = "../task"`(多态、可选)。
 - task **不提供 `--clone-to` 等价物**:依赖固定落缓存,不需选位置(这是和 solution 唯一的有意差别:task url→隐藏缓存、solution url→可见 `./<repo>`;本地默认 task=`../task`、solution=cwd)。
 
