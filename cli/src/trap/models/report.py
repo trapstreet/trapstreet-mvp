@@ -153,11 +153,8 @@ def _auto_summary_dict(cases: tuple[CaseResult, ...]) -> dict[str, Any]:
     if grader_costs:
         out["cost_usd_total"] = round(sum(grader_costs), 6)
     # Proxy-intercepted cost data takes priority over grader-reported cost.
-    proxy_cases = [c for c in scored if c.cost is not None]
-    if proxy_cases:
-        out["cost_usd_total"] = round(sum(c.cost.cost_usd for c in proxy_cases), 6)  # type: ignore[union-attr]
-        out["tokens_total"] = sum(
-            c.cost.prompt_tokens + c.cost.completion_tokens
-            for c in proxy_cases  # type: ignore[union-attr]
-        )
+    proxy_costs = [c.cost for c in scored if c.cost is not None]
+    if proxy_costs:
+        out["cost_usd_total"] = round(sum(cost.cost_usd for cost in proxy_costs), 6)
+        out["tokens_total"] = sum(cost.prompt_tokens + cost.completion_tokens for cost in proxy_costs)
     return out
