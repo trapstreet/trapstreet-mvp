@@ -21,12 +21,13 @@ class CostConfig(BaseModel):
 
 
 class TaskSource(BaseModel):
-    # local task dir (relative to trap.yaml); None → ../task, or .trap/repos/<repo> when remote set
-    local: Path | None = None
-    # optional git+ URL (e.g. git+https://github.com/org/repo@rev#subdirectory=X);
-    # when set, clone into local and validate the existing clone's origin matches
-    remote: str | None = None
-    # shell command to run in cwd after a fresh clone or branch update
+    # local task dir XOR git+ URL (relative to trap.yaml), same polymorphic form
+    # as --solution; omitted → ../task. A git+ URL clones into clone_to.
+    source: str = "../task"
+    # clone target for a git+ source (relative to trap.yaml, or absolute);
+    # omitted → hidden cache .trap/repos/<repo>. Only valid when source is a URL.
+    clone_to: Path | None = None
+    # shell command to run in the checkout after a fresh clone or branch update
     init_cmd: str | None = None
 
 
@@ -38,7 +39,7 @@ class Task(BaseModel):
     name: str = ""
     description: str = ""
     cmd: str
-    traptask: TaskSource  # local dir and/or git+ remote, plus optional init_cmd
+    traptask: TaskSource = TaskSource()  # local path or git+ URL (+ optional clone_to / init_cmd)
     inputs: InputsBinding | None = None
     # output filenames; solution writes each to the path given by outputs_envvar[name] at runtime
     file_outputs: tuple[str, ...] = ()

@@ -92,22 +92,29 @@ class TrapTaskLoader:
 
     @classmethod
     def from_task(cls, task: Task, trap_dir: Path) -> TrapTaskLoader:
-        """Resolve traptask.yaml from a Task's traptask field and the trap.yaml directory."""
-        from trap.git_ops import ParsedGitUrl, RemoteRepo
+        """Resolve traptask.yaml from a Task's traptask field and the trap.yaml directory.
 
-        source = task.traptask
-        if source.remote is not None:
-            parsed = ParsedGitUrl.from_full_url(source.remote)
-            # local given → clone there; omitted → hidden cache .trap/repos/<repo>
-            dest = source.local or Path(".trap") / "repos" / parsed.basename
+        Mirrors `TrapLoader.from_solution`: `source` is a local path or a git+ URL.
+        A URL clones into `clone_to` (omitted → hidden cache .trap/repos/<repo>,
+        since the task is a dependency); a local path uses it in place and rejects
+        `clone_to`. Raises GitOpsError on a bad spec (caller maps it to a CLI error).
+        """
+        from trap.git_ops import GitOpsError, ParsedGitUrl, RemoteRepo
+
+        spec = task.traptask
+        if ParsedGitUrl.looks_remote(spec.source):
+            parsed = ParsedGitUrl.from_full_url(spec.source)
+            dest = spec.clone_to or Path(".trap") / "repos" / parsed.basename
             remote_repo = RemoteRepo(parsed, (trap_dir / dest).resolve())
             is_local_changed = remote_repo.ensure()
-            if is_local_changed and source.init_cmd:
+            if is_local_changed and spec.init_cmd:
                 # raises subprocess.CalledProcessError on non-zero exit
-                subprocess.run(source.init_cmd, shell=True, cwd=remote_repo.local_dir, check=True)
+                subprocess.run(spec.init_cmd, shell=True, cwd=remote_repo.local_dir, check=True)
             traptask_dir = remote_repo.local_dir
         else:
-            traptask_dir = (trap_dir / (source.local or Path("../task"))).resolve()
+            if spec.clone_to is not None:
+                raise GitOpsError("traptask.clone_to only applies to a remote (git URL) source")
+            traptask_dir = (trap_dir / spec.source).resolve()
         return cls(traptask_dir / "traptask.yaml")
 
     @property

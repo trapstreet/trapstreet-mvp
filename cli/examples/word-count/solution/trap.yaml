@@ -5,7 +5,7 @@ tasks:
   word-count:
     cmd: uv run python word_count.py
     traptask:
-      local: ../task
+      source: ../task
     inputs:
       stdin: text.txt
       files:
@@ -23,7 +23,7 @@ tasks:
   run:
     cmd: uv run python word_count.py
     traptask:
-      local: ../task-run
+      source: ../task-run
     inputs:
       stdin: text.txt
       files:

@@ -23,15 +23,16 @@ Ownership:
 Solution may also receive content piped to stdin (declared via `inputs.stdin` in trap.yaml).
 stdout and stderr are always captured automatically.
 
-**trap.yaml format** (`tasks:` wrapper; `traptask` is required for all tasks):
+**trap.yaml format** (`tasks:` wrapper; `traptask` is optional, defaults to `../task`):
 ```yaml
 tasks:
   test:
     cmd: uv run python solution.py
-    traptask:                    # task source (flat object; bare strings no longer accepted)
-      local: ../task             # local task dir; `traptask: {}` defaults to ../task
-      # remote: git+https://github.com/org/repo@rev#subdirectory=X  # optional: clone this into local
-      # init_cmd: uv sync        # optional: run after a clone / fast-forward
+    traptask:                    # task source; whole block optional, defaults to ../task
+      source: ../task            # local path or git+ URL (polymorphic, like --solution)
+      # source: git+https://github.com/org/repo@rev#subdirectory=X   # remote → cloned into clone_to
+      # clone_to: .trap/repos/task   # optional clone target for a remote (default: hidden cache)
+      # init_cmd: uv sync        # optional: run in the checkout after a clone / fast-forward
     inputs:
       stdin: input.txt           # optional: pipe this file as stdin
       files:                     # optional: validate these filenames exist before running
@@ -45,7 +46,7 @@ tasks:
   run:                           # second task; same traptask, different cmd or inputs
     cmd: uv run python solution.py
     traptask:
-      local: ../task
+      source: ../task
     inputs:
       stdin: input.txt
     file_outputs:
@@ -154,7 +155,7 @@ tasks:
   test:
     cmd: uv run python solution.py
     traptask:
-      local: ../task
+      source: ../task
     cost:
       enabled: false   # omit to auto-detect from env
 ```
