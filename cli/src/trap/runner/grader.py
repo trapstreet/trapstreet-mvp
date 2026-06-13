@@ -38,13 +38,13 @@ class GraderRunner:
         self.grader_outputs_paths = GraderOutputsPaths.from_dir(runner.task_outputs_dir)
 
     @property
-    def _payload(self) -> str:
+    def _manifest(self) -> str:
         return json.dumps([c.model_dump() for c in self.cases])
 
     def run(self) -> Any:
         proc = subprocess.run(
             shlex.split(self.grader.cmd),
-            env={**os.environ, self.grader.payload_envvar: self._payload},
+            env={**os.environ, self.grader.manifest_envvar: self._manifest},
             cwd=self.runner.traptask_dir,
             capture_output=True,
             text=True,

@@ -55,9 +55,9 @@ tasks:
 
 **Task side** — `traptask.yaml` is optional. If absent, trap auto-discovers cases by scanning `inputs/` subdirectories and runs in output-only mode (no judge/grader/expected). When present:
 - `judge` and `grader` in traptask.yaml are optional; omitting either skips that step
-- judge/grader receive `TRAPTASK_PAYLOAD` as a JSON string (not a file path) mapping `{inputs, outputs, expected}` namespaces (`filename → absolute path`)
+- judge/grader receive `TRAPTASK_MANIFEST` as a JSON string (not a file path) mapping `{inputs, outputs, expected}` namespaces (`filename → absolute path`)
 - judge/grader write their result JSON to **stdout**; trap captures and stores it as `metrics`
-- `payload_envvar` in traptask.yaml overrides the env var name (default `TRAPTASK_PAYLOAD`)
+- `manifest_envvar` in traptask.yaml overrides the env var name (default `TRAPTASK_MANIFEST`)
 
 **Namespace key convention**: filenames including extension (`config.json`, `case_stdout`, `case_meta.json`).
 

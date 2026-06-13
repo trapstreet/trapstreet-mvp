@@ -7,7 +7,7 @@ from pydantic import BaseModel
 class SubprocessCmd(BaseModel):
     # cmd is relative to traptask.yaml's directory and run via shlex.split
     cmd: str
-    payload_envvar: str = "TRAPTASK_PAYLOAD"
+    manifest_envvar: str = "TRAPTASK_MANIFEST"
 
 
 class DirsConfig(BaseModel):

@@ -48,7 +48,7 @@ class JudgeRunner:
         return {f.name: str(f.resolve()) for f in sorted(dir_path.iterdir()) if f.is_file()}
 
     @property
-    def _payload(self) -> str:
+    def _manifest(self) -> str:
         return json.dumps(
             {
                 "inputs": self._namespace(self.case_inputs_dir),
@@ -60,7 +60,7 @@ class JudgeRunner:
     def run(self) -> Any:
         proc = subprocess.run(
             shlex.split(self.judge.cmd),
-            env={**os.environ, self.judge.payload_envvar: self._payload},
+            env={**os.environ, self.judge.manifest_envvar: self._manifest},
             cwd=self.runner.traptask_dir,
             capture_output=True,
             text=True,

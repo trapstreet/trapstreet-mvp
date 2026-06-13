@@ -2,7 +2,7 @@ import json
 import os
 
 if __name__ == "__main__":
-    results = json.loads(os.environ["TRAPTASK_PAYLOAD"])
+    results = json.loads(os.environ["TRAPTASK_MANIFEST"])
 
     if not results:
         print(json.dumps({"passed": True, "score": 1.0}))

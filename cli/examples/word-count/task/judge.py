@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 if __name__ == "__main__":
-    data = json.loads(os.environ["TRAPTASK_PAYLOAD"])
+    data = json.loads(os.environ["TRAPTASK_MANIFEST"])
 
     actual_freq = json.loads(Path(data["outputs"]["frequencies.json"]).read_text())
     actual_summary = json.loads(Path(data["outputs"]["summary.json"]).read_text())
