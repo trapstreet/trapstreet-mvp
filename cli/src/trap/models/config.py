@@ -11,7 +11,7 @@ class InputsBinding(BaseModel):
     stdin: str | None = None  # filename in inputs/{case_id}/ piped as subprocess stdin
     # declared input keys; runner validates these stems exist in inputs/{case_id}/ before running
     files: tuple[str, ...] = ()
-    # all files in inputs/{case_id}/ are also exposed via INPUTS env var at runtime
+    # all files in inputs/{case_id}/ are also exposed via the manifest's `inputs` namespace at runtime
     # TODO: args: list[str] = []   — pass inputs as CLI positional/named arguments
     # TODO: env: dict[str, str] = {}  — inject inputs as environment variables
 
@@ -41,12 +41,13 @@ class Task(BaseModel):
     cmd: str
     traptask: TaskSource = TaskSource()  # local path or git+ URL (+ optional clone_to / init_cmd)
     inputs: InputsBinding | None = None
-    # output filenames; solution writes each to the path given by outputs_envvar[name] at runtime
+    # output filenames; solution writes each to the path given by the manifest's
+    # `outputs` namespace at runtime
     file_outputs: tuple[str, ...] = ()
     timeout: int = 30
-    # env var names injected by the runner; override if the solution already uses these names
-    inputs_envvar: str = "INPUTS"
-    outputs_envvar: str = "OUTPUTS"
+    # env var holding the run manifest ({inputs, outputs} → filename → absolute
+    # path), injected by the runner; override if the solution needs another name
+    manifest_envvar: str = "TRAP_MANIFEST"
     # self-reported solution profile — e.g. {model, framework, max_tokens}.
     # Free-form; never validated by trap or trapstreet. Plumbed through to
     # report.json's `metadata` field for the leaderboard's "Solution metadata"

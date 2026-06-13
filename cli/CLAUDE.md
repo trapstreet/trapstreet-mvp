@@ -16,9 +16,12 @@ Ownership:
 
 ## IO Contract
 
-**Solution side** — runner injects two env vars before each run (values are JSON strings, not file paths):
-- `INPUTS` → JSON string mapping `filename → absolute path` for all files in `inputs/{case_id}/`
-- `OUTPUTS` → JSON string mapping `filename → absolute path` for each declared `file_outputs` entry
+**Solution side** — runner injects one env var before each run, `TRAP_MANIFEST`, a JSON
+string (not a file path) with two namespaces (`filename → absolute path`):
+- `inputs` → all files in `inputs/{case_id}/`
+- `outputs` → each declared `file_outputs` entry (paths to write to)
+
+Mirrors the task side's `TRAPTASK_MANIFEST`: same shape, one mental model.
 
 Solution may also receive content piped to stdin (declared via `inputs.stdin` in trap.yaml).
 stdout and stderr are always captured automatically.
@@ -37,11 +40,10 @@ tasks:
       stdin: input.txt           # optional: pipe this file as stdin
       files:                     # optional: validate these filenames exist before running
         - config.json
-    file_outputs:                # files the solution writes via OUTPUTS env var
+    file_outputs:                # files the solution writes via the manifest's `outputs` namespace
       - result.json
     timeout: 30                  # default 30s
-    inputs_envvar: INPUTS           # override if solution already uses this name
-    outputs_envvar: OUTPUTS
+    manifest_envvar: TRAP_MANIFEST   # override the env var name if the solution needs another
 
   run:                           # second task; same traptask, different cmd or inputs
     cmd: uv run python solution.py

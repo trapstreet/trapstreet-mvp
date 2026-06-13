@@ -48,16 +48,12 @@ class CaseRunner:
         return ""
 
     @property
-    def _inputs_envvar(self) -> str:
-        return json.dumps(
-            {f.name: str(f.resolve()) for f in sorted(self.case_inputs_dir.iterdir()) if f.is_file()}
-        )
-
-    @property
-    def _outputs_envvar(self) -> str:
-        return json.dumps(
-            {name: str((self.case_outputs_dir / name).resolve()) for name in self.runner.task.file_outputs}
-        )
+    def _manifest(self) -> str:
+        inputs = {f.name: str(f.resolve()) for f in sorted(self.case_inputs_dir.iterdir()) if f.is_file()}
+        outputs = {
+            name: str((self.case_outputs_dir / name).resolve()) for name in self.runner.task.file_outputs
+        }
+        return json.dumps({"inputs": inputs, "outputs": outputs})
 
     def run(self) -> CaseResult:
         self.case_outputs_dir.mkdir(parents=True, exist_ok=True)
@@ -86,8 +82,7 @@ class CaseRunner:
                 timeout=task.timeout,
                 env={
                     **os.environ,
-                    task.inputs_envvar: self._inputs_envvar,
-                    task.outputs_envvar: self._outputs_envvar,
+                    task.manifest_envvar: self._manifest,
                     **proxy_env,
                 },
             )

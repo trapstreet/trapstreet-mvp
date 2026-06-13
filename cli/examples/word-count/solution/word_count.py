@@ -5,8 +5,9 @@ import time
 from collections import Counter
 
 text = sys.stdin.read()
-inputs = json.loads(os.environ["INPUTS"])
-outputs = json.loads(os.environ["OUTPUTS"])
+manifest = json.loads(os.environ["TRAP_MANIFEST"])
+inputs = manifest["inputs"]
+outputs = manifest["outputs"]
 
 with open(inputs["config.json"]) as f:
     config = json.load(f)

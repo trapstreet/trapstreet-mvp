@@ -8,7 +8,7 @@ from pathlib import Path
 
 import anthropic
 
-inputs = json.loads(os.environ["INPUTS"])
+inputs = json.loads(os.environ["TRAP_MANIFEST"])["inputs"]
 question = Path(inputs["question.txt"]).read_text().strip()
 
 client = anthropic.Anthropic()
