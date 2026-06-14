@@ -31,8 +31,9 @@ directories, read what you need." Directories (not pre-scanned `{name → path}`
 dicts) keep the contract lossless for nested trees and let the consumer choose its
 own representation; the consumer already knows the fixture filenames it authored.
 
-Solution may also receive content piped to stdin (declared via `inputs.stdin` in trap.yaml).
-stdout/stderr/exit_code are always captured automatically (see the `run` block below).
+Solution may also receive content piped to stdin (declared via the top-level `stdin`
+field in trap.yaml — a single input filename). stdout/stderr/exit_code are always
+captured automatically (see the `run` block below).
 
 **trap.yaml format** (`tasks:` wrapper; `traptask` is optional, defaults to `../task`):
 ```yaml
@@ -44,19 +45,15 @@ tasks:
       # source: git+https://github.com/org/repo@rev#subdirectory=X   # remote → cloned into clone_to
       # clone_to: .trap/repos/task   # optional clone target for a remote (default: hidden cache)
       # init_cmd: uv sync        # optional: run in the checkout after a clone / fast-forward
-    inputs:
-      stdin: input.txt           # optional: pipe this file as stdin
-      files:                     # optional: validate these filenames exist before running
-        - config.json
+    stdin: input.txt             # optional: pipe this input file to the solution's stdin
     timeout: 30                  # default 30s
     manifest_envvar: TRAP_MANIFEST   # override the env var name if the solution needs another
 
-  run:                           # second task; same traptask, different cmd or inputs
+  run:                           # second task; same traptask, different cmd or stdin
     cmd: uv run python solution.py
     traptask:
       source: ../task
-    inputs:
-      stdin: input.txt
+    stdin: input.txt
 ```
 
 **Task side** — `traptask.yaml` is optional. If absent, trap auto-discovers cases by scanning `inputs/` subdirectories and runs in output-only mode (no judge/grader/expected). When present:

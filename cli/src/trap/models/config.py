@@ -7,15 +7,6 @@ from typing import Any
 from pydantic import BaseModel
 
 
-class InputsBinding(BaseModel):
-    stdin: str | None = None  # filename in inputs/{case_id}/ piped as subprocess stdin
-    # declared input keys; runner validates these stems exist in inputs/{case_id}/ before running
-    files: tuple[str, ...] = ()
-    # all files in inputs/{case_id}/ are also exposed via the manifest's `inputs` namespace at runtime
-    # TODO: args: list[str] = []   — pass inputs as CLI positional/named arguments
-    # TODO: env: dict[str, str] = {}  — inject inputs as environment variables
-
-
 class CostConfig(BaseModel):
     enabled: bool = True
 
@@ -40,7 +31,7 @@ class Task(BaseModel):
     description: str = ""
     cmd: str
     traptask: TaskSource = TaskSource()  # local path or git+ URL (+ optional clone_to / init_cmd)
-    inputs: InputsBinding | None = None
+    stdin: str | None = None  # optional: filename in inputs/{case_id}/ piped to the solution's stdin
     timeout: int = 30
     # env var holding the run manifest (inputs → directory path; outputs →
     # directory path), injected by the runner; override if the solution needs

@@ -60,8 +60,7 @@ tasks:
     description: Echo solution — reads stdin JSON, writes it back to stdout
     cmd: uv run python echo.py
     traptask: ../task          # path to the task directory
-    inputs:
-      stdin: input.json        # pipe inputs/{case_id}/input.json into stdin
+    stdin: input.json          # pipe inputs/{case_id}/input.json into stdin
 ```
 
 ---

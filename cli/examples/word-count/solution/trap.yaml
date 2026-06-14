@@ -6,10 +6,7 @@ tasks:
     cmd: uv run python word_count.py
     traptask:
       source: ../task
-    inputs:
-      stdin: text.txt
-      files:
-        - config.json
+    stdin: text.txt
     # Self-reported "Solution metadata" — never validated by trapstreet,
     # shown on the run detail page so the leaderboard isn't a black box.
     # Edit these to describe your actual solution.
@@ -21,7 +18,4 @@ tasks:
     cmd: uv run python word_count.py
     traptask:
       source: ../task-run
-    inputs:
-      stdin: text.txt
-      files:
-        - config.json
+    stdin: text.txt

@@ -25,9 +25,9 @@ class CaseRunner:
 
     @property
     def _stdin(self) -> str:
-        task_inputs = self.runner.task.inputs
-        if task_inputs and task_inputs.stdin:
-            return (self.case_inputs_dir / task_inputs.stdin).read_text()
+        stdin = self.runner.task.stdin
+        if stdin:
+            return (self.case_inputs_dir / stdin).read_text()
         return ""
 
     @property

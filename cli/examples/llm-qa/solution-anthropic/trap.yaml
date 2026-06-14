@@ -3,9 +3,6 @@ tasks:
     cmd: sh -c 'set -a && . .env && set +a && uv run solution.py'
     traptask:
       source: ../task
-    inputs:
-      files:
-        - question.txt
     metadata:
       provider: anthropic
       model: claude-sonnet-4-20250514

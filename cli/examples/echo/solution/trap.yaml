@@ -6,8 +6,7 @@ tasks:
     cmd: uv run python echo.py
     traptask:
       source: ../task
-    inputs:
-      stdin: input.json
+    stdin: input.json
     # See word-count's trap.yaml for what this is.
     metadata:
       framework: stdlib-python
@@ -17,5 +16,4 @@ tasks:
     cmd: uv run python echo.py
     traptask:
       source: ../task
-    inputs:
-      stdin: input.json
+    stdin: input.json
