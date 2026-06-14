@@ -20,7 +20,7 @@ class GraderRunner:
         self.runner = runner
         self.cases = case_results
         # Run-level grader gets its own `grader/` directory next to report.json.
-        self.grader_dir = runner.task_outputs_dir / "grader"
+        self.grader_dir = runner.run_dir / "grader"
         self.capture = Capture.from_dir(self.grader_dir)
 
     @property

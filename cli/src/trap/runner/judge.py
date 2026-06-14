@@ -7,7 +7,7 @@ import subprocess
 from typing import TYPE_CHECKING, Any
 
 from trap.models import SubprocessCmd
-from trap.runner.capture import Capture
+from trap.runner.layout import CaseLayout
 
 if TYPE_CHECKING:
     from trap.runner.task import TaskRunner
@@ -17,32 +17,26 @@ class JudgeRunner:
     def __init__(self, runner: TaskRunner, case_id: str) -> None:
         self.runner = runner
         self.case_id = case_id
-        self.case_inputs_dir = runner.task_inputs_dir / case_id
-        self.case_expected_dir = runner.task_expected_dir / case_id
-        case_dir = runner.task_outputs_dir / case_id
-        # The judge reads the solution actor's outputs + run captures, and writes
-        # its own run captures into a sibling `judge/` directory.
-        self.solution_dir = case_dir / "solution"
-        self.solution_outputs_dir = self.solution_dir / "outputs"
-        self.judge_dir = case_dir / "judge"
-        self.capture = Capture.from_dir(self.judge_dir)
+        self.case_inputs_dir = runner.task_inputs_dir / case_id  # task-repo side
+        self.case_expected_dir = runner.task_expected_dir / case_id  # task-repo side
+        self.layout = CaseLayout.for_case(runner.run_dir, case_id)  # workspace side
 
         assert runner.traptask_obj.judge is not None
         self.judge: SubprocessCmd = runner.traptask_obj.judge
 
     @property
     def _manifest(self) -> str:
-        expected = self.case_expected_dir
-        run = Capture.from_dir(self.solution_dir)
+        expected_dir = self.case_expected_dir
+        solution_capture = self.layout.solution_capture
         return json.dumps(
             {
                 "inputs_dir": str(self.case_inputs_dir.resolve()),
-                "expected_dir": str(expected.resolve()) if expected.exists() else None,
-                "outputs_dir": str(self.solution_outputs_dir.resolve()),
+                "expected_dir": str(expected_dir.resolve()) if expected_dir.exists() else None,
+                "outputs_dir": str(self.layout.outputs_dir.resolve()),
                 "run": {
-                    "stdout": str(run.stdout.resolve()),
-                    "stderr": str(run.stderr.resolve()),
-                    "meta": str(run.meta.resolve()),
+                    "stdout": str(solution_capture.stdout.resolve()),
+                    "stderr": str(solution_capture.stderr.resolve()),
+                    "meta": str(solution_capture.meta.resolve()),
                 },
             }
         )
@@ -55,7 +49,7 @@ class JudgeRunner:
             capture_output=True,
             text=True,
         )
-        self.capture.write(proc.stdout, proc.stderr, {"exit_code": proc.returncode})
+        self.layout.judge_capture.write(proc.stdout, proc.stderr, {"exit_code": proc.returncode})
 
         if proc.returncode != 0:
             raise subprocess.CalledProcessError(proc.returncode, self.judge.cmd, proc.stdout, proc.stderr)

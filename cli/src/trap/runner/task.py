@@ -18,19 +18,19 @@ class TaskRunner:
         trap_dir: Path,
         traptask_dir: Path,
         traptask_obj: TrapTask,
-        task_outputs_dir: Path,
+        run_dir: Path,
     ) -> None:
         self.task = task_obj
         self.trap_dir = trap_dir
         self.traptask_obj = traptask_obj
         self.traptask_dir = traptask_dir
-        self.task_outputs_dir = task_outputs_dir
+        self.run_dir = run_dir
 
         self.task_inputs_dir = (traptask_dir / traptask_obj.dirs.inputs).resolve()
         self.task_expected_dir = (traptask_dir / traptask_obj.dirs.expected).resolve()
 
     def _update_latest(self) -> None:
-        latest = self.task_outputs_dir.parent / "latest"
+        latest = self.run_dir.parent / "latest"
         if latest.is_symlink():
             latest.unlink()
         elif latest.exists():
@@ -39,7 +39,7 @@ class TaskRunner:
             # Move it aside (non-destructive) so subsequent runs self-heal.
             suffix = datetime.now().isoformat(timespec="microseconds")
             latest.rename(latest.with_name(f"latest.broken.{suffix}"))
-        latest.symlink_to(self.task_outputs_dir.name)
+        latest.symlink_to(self.run_dir.name)
 
     def _iter(
         self,

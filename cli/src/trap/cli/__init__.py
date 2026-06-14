@@ -74,7 +74,7 @@ def run(
         trap_dir=trap_yaml_loader.trap_dir,
         traptask_obj=task_yaml_loader.traptask,
         traptask_dir=task_yaml_loader.task_dir,
-        task_outputs_dir=report_handle.run_dir,
+        run_dir=report_handle.run_dir,
     )
     prog_console = console if output == OutputFormat.rich else None
     with CaseProgress(active_cases, console=prog_console) as prog:

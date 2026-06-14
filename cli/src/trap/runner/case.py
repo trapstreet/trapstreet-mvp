@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from trap.cost import CostProxy
 from trap.models import CaseResult
 from trap.models.cost import CaseCost
-from trap.runner.capture import Capture
+from trap.runner.layout import CaseLayout
 
 if TYPE_CHECKING:
     from trap.runner.task import TaskRunner
@@ -20,12 +20,8 @@ class CaseRunner:
     def __init__(self, runner: TaskRunner, case_id: str) -> None:
         self.runner = runner
         self.case_id = case_id
-        self.case_inputs_dir = runner.task_inputs_dir / case_id
-        # The solution actor owns `{case_id}/solution/`: it writes artefacts into
-        # `outputs/`, and trap captures its run into sibling stdout/stderr/meta.
-        self.solution_dir = runner.task_outputs_dir / case_id / "solution"
-        self.solution_outputs_dir = self.solution_dir / "outputs"
-        self.capture = Capture.from_dir(self.solution_dir)
+        self.case_inputs_dir = runner.task_inputs_dir / case_id  # task-repo side
+        self.layout = CaseLayout.for_case(runner.run_dir, case_id)  # workspace side
 
     @property
     def _stdin(self) -> str:
@@ -39,12 +35,12 @@ class CaseRunner:
         return json.dumps(
             {
                 "inputs_dir": str(self.case_inputs_dir.resolve()),
-                "outputs_dir": str(self.solution_outputs_dir.resolve()),
+                "outputs_dir": str(self.layout.outputs_dir.resolve()),
             }
         )
 
     def run(self) -> CaseResult:
-        self.solution_outputs_dir.mkdir(parents=True, exist_ok=True)
+        self.layout.outputs_dir.mkdir(parents=True, exist_ok=True)
 
         task = self.runner.task
 
@@ -81,7 +77,7 @@ class CaseRunner:
                 if partial.calls > 0:
                     case_cost = partial
 
-        self.capture.write(
+        self.layout.solution_capture.write(
             proc.stdout,
             proc.stderr,
             {"exit_code": proc.returncode, "duration": duration},  # get cost in here in the future
