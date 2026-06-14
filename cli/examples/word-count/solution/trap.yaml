@@ -10,9 +10,6 @@ tasks:
       stdin: text.txt
       files:
         - config.json
-    file_outputs:
-      - frequencies.json
-      - summary.json
     # Self-reported "Solution metadata" — never validated by trapstreet,
     # shown on the run detail page so the leaderboard isn't a black box.
     # Edit these to describe your actual solution.
@@ -28,6 +25,3 @@ tasks:
       stdin: text.txt
       files:
         - config.json
-    file_outputs:
-      - frequencies.json
-      - summary.json

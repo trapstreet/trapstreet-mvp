@@ -3,11 +3,12 @@ import os
 import sys
 import time
 from collections import Counter
+from pathlib import Path
 
 text = sys.stdin.read()
 manifest = json.loads(os.environ["TRAP_MANIFEST"])
 inputs = manifest["inputs"]
-outputs = manifest["outputs"]
+outputs_dir = Path(manifest["outputs_dir"])
 
 with open(inputs["config.json"]) as f:
     config = json.load(f)
@@ -23,9 +24,9 @@ counts = Counter(words)
 
 time.sleep(1)
 
-with open(outputs["frequencies.json"], "w") as f:
+with open(outputs_dir / "frequencies.json", "w") as f:
     json.dump(dict(counts), f)
 
 top_words = [{"word": w, "count": c} for w, c in counts.most_common(top_n)]
-with open(outputs["summary.json"], "w") as f:
+with open(outputs_dir / "summary.json", "w") as f:
     json.dump({"total_words": len(words), "unique_words": len(counts), "top_words": top_words}, f)

@@ -50,10 +50,7 @@ class CaseRunner:
     @property
     def _manifest(self) -> str:
         inputs = {f.name: str(f.resolve()) for f in sorted(self.case_inputs_dir.iterdir()) if f.is_file()}
-        outputs = {
-            name: str((self.case_outputs_dir / name).resolve()) for name in self.runner.task.file_outputs
-        }
-        return json.dumps({"inputs": inputs, "outputs": outputs})
+        return json.dumps({"inputs": inputs, "outputs_dir": str(self.case_outputs_dir.resolve())})
 
     def run(self) -> CaseResult:
         self.case_outputs_dir.mkdir(parents=True, exist_ok=True)

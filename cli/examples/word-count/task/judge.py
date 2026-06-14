@@ -4,9 +4,10 @@ from pathlib import Path
 
 if __name__ == "__main__":
     data = json.loads(os.environ["TRAPTASK_MANIFEST"])
+    outputs_dir = Path(data["outputs_dir"])
 
-    actual_freq = json.loads(Path(data["outputs"]["frequencies.json"]).read_text())
-    actual_summary = json.loads(Path(data["outputs"]["summary.json"]).read_text())
+    actual_freq = json.loads((outputs_dir / "frequencies.json").read_text())
+    actual_summary = json.loads((outputs_dir / "summary.json").read_text())
     expected_freq = json.loads(Path(data["expected"]["frequencies.json"]).read_text())
     expected_summary = json.loads(Path(data["expected"]["summary.json"]).read_text())
 

@@ -17,6 +17,13 @@ cases:
   - id: empty
     description: empty text produces zero counts and empty top_words
 
+# Advisory contract for solution authors — the files a solution should write
+# into the manifest's outputs_dir. Not enforced by trap; the judge scans
+# outputs_dir and decides. Omit for tasks with dynamically-named outputs.
+file_outputs:
+  - frequencies.json
+  - summary.json
+
 judge:
   cmd: uv run python judge.py
 

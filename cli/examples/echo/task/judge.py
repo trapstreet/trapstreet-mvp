@@ -5,9 +5,10 @@ from pathlib import Path
 
 if __name__ == "__main__":
     data = json.loads(os.environ["TRAPTASK_MANIFEST"])
+    outputs_dir = Path(data["outputs_dir"])
 
-    stdout = Path(data["outputs"]["case_stdout"]).read_text().strip()
-    exit_code = json.loads(Path(data["outputs"]["case_meta.json"]).read_text())["exit_code"]
+    stdout = (outputs_dir / "case_stdout").read_text().strip()
+    exit_code = json.loads((outputs_dir / "case_meta.json").read_text())["exit_code"]
     expected = json.loads(Path(data["expected"]["expected.json"]).read_text())
 
     results = []

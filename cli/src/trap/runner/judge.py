@@ -52,7 +52,7 @@ class JudgeRunner:
         return json.dumps(
             {
                 "inputs": self._namespace(self.case_inputs_dir),
-                "outputs": self._namespace(self.case_outputs_dir),
+                "outputs_dir": str(self.case_outputs_dir.resolve()),
                 "expected": self._namespace(self.case_expected_dir),
             }
         )

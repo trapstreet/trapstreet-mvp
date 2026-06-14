@@ -17,11 +17,16 @@ Ownership:
 ## IO Contract
 
 **Solution side** — runner injects one env var before each run, `TRAP_MANIFEST`, a JSON
-string (not a file path) with two namespaces (`filename → absolute path`):
-- `inputs` → all files in `inputs/{case_id}/`
-- `outputs` → each declared `file_outputs` entry (paths to write to)
+string (not a file path):
+- `inputs` → `{filename → absolute path}` for all files in `inputs/{case_id}/`
+- `outputs_dir` → absolute path of the per-case directory the solution writes into.
+  The solution may write any files here (declared contract files and/or
+  dynamically-named ones); trap captures the whole directory.
 
-Mirrors the task side's `TRAPTASK_MANIFEST`: same shape, one mental model.
+Mirrors the task side's `TRAPTASK_MANIFEST`: same `inputs` shape + same
+`outputs_dir`, one mental model. `outputs` is a directory rather than a named
+dict because outputs are *produced* (possibly dynamic), unlike the authored
+`inputs`/`expected` fixtures whose names are known ahead of time.
 
 Solution may also receive content piped to stdin (declared via `inputs.stdin` in trap.yaml).
 stdout and stderr are always captured automatically.
@@ -40,8 +45,6 @@ tasks:
       stdin: input.txt           # optional: pipe this file as stdin
       files:                     # optional: validate these filenames exist before running
         - config.json
-    file_outputs:                # files the solution writes via the manifest's `outputs` namespace
-      - result.json
     timeout: 30                  # default 30s
     manifest_envvar: TRAP_MANIFEST   # override the env var name if the solution needs another
 
@@ -51,17 +54,25 @@ tasks:
       source: ../task
     inputs:
       stdin: input.txt
-    file_outputs:
-      - result.json
 ```
 
 **Task side** — `traptask.yaml` is optional. If absent, trap auto-discovers cases by scanning `inputs/` subdirectories and runs in output-only mode (no judge/grader/expected). When present:
 - `judge` and `grader` in traptask.yaml are optional; omitting either skips that step
-- judge/grader receive `TRAPTASK_MANIFEST` as a JSON string (not a file path) mapping `{inputs, outputs, expected}` namespaces (`filename → absolute path`)
+- judge receives `TRAPTASK_MANIFEST` (JSON string, not a file path): `inputs` and
+  `expected` are `{filename → absolute path}` dicts; `outputs_dir` is the absolute
+  path of the case directory. The judge **scans `outputs_dir` itself** — it sees
+  every captured file (`case_stdout`, `case_stderr`, `case_meta.json`, plus
+  anything the solution wrote), so dynamically-named outputs are supported.
+- grader receives `TRAPTASK_MANIFEST` as the JSON list of per-case results (not the namespaced manifest)
+- `file_outputs` in traptask.yaml is an **optional, advisory** list of filenames the
+  solution is expected to write — a published contract for solution authors. trap
+  never enforces it; the judge is the sole arbiter. Omit for dynamic outputs.
 - judge/grader write their result JSON to **stdout**; trap captures and stores it as `metrics`
 - `manifest_envvar` in traptask.yaml overrides the env var name (default `TRAPTASK_MANIFEST`)
 
-**Namespace key convention**: filenames including extension (`config.json`, `case_stdout`, `case_meta.json`).
+**Namespace key convention**: `inputs`/`expected` keys are filenames including extension
+(`config.json`, `case_stdout`, `case_meta.json`); `outputs_dir` is a directory path joined
+with those same conventional names.
 
 **`.trap/` workspace**:
 ```
@@ -69,7 +80,7 @@ tasks:
 └── {task}/
     ├── latest -> 2026-05-09T14:30:00/   # symlink to most recent run
     └── 2026-05-09T14:30:00/
-        ├── {case_id}/                    # case outputs (case_stdout, case_stderr, case_meta.json, file_outputs)
+        ├── {case_id}/                    # case outputs_dir (case_stdout, case_stderr, case_meta.json, solution-written files)
         └── report.json                   # report for this run
 ```
 

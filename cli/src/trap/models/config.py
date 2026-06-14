@@ -41,12 +41,10 @@ class Task(BaseModel):
     cmd: str
     traptask: TaskSource = TaskSource()  # local path or git+ URL (+ optional clone_to / init_cmd)
     inputs: InputsBinding | None = None
-    # output filenames; solution writes each to the path given by the manifest's
-    # `outputs` namespace at runtime
-    file_outputs: tuple[str, ...] = ()
     timeout: int = 30
-    # env var holding the run manifest ({inputs, outputs} → filename → absolute
-    # path), injected by the runner; override if the solution needs another name
+    # env var holding the run manifest (inputs → {filename → absolute path};
+    # outputs_dir → directory path), injected by the runner; override if the
+    # solution needs another name
     manifest_envvar: str = "TRAP_MANIFEST"
     # self-reported solution profile — e.g. {model, framework, max_tokens}.
     # Free-form; never validated by trap or trapstreet. Plumbed through to
