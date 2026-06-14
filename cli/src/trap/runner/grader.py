@@ -4,29 +4,13 @@ import json
 import os
 import shlex
 import subprocess
-from dataclasses import dataclass
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from trap.models import CaseResult, SubprocessCmd
+from trap.runner.capture import Capture
 
 if TYPE_CHECKING:
     from trap.runner.task import TaskRunner
-
-
-@dataclass
-class GraderOutputsPaths:
-    stdout: Path
-    stderr: Path
-    meta: Path
-
-    @classmethod
-    def from_dir(cls, outputs_dir: Path) -> GraderOutputsPaths:
-        return cls(
-            stdout=outputs_dir / "grader_stdout",
-            stderr=outputs_dir / "grader_stderr",
-            meta=outputs_dir / "grader_meta.json",
-        )
 
 
 class GraderRunner:
@@ -35,7 +19,9 @@ class GraderRunner:
         self.grader: SubprocessCmd = runner.traptask_obj.grader
         self.runner = runner
         self.cases = case_results
-        self.grader_outputs_paths = GraderOutputsPaths.from_dir(runner.task_outputs_dir)
+        # Run-level grader gets its own `grader/` directory next to report.json.
+        self.grader_dir = runner.task_outputs_dir / "grader"
+        self.capture = Capture.from_dir(self.grader_dir)
 
     @property
     def _manifest(self) -> str:
@@ -49,9 +35,7 @@ class GraderRunner:
             capture_output=True,
             text=True,
         )
-        self.grader_outputs_paths.stdout.write_text(proc.stdout)
-        self.grader_outputs_paths.stderr.write_text(proc.stderr)
-        self.grader_outputs_paths.meta.write_text(json.dumps({"exit_code": proc.returncode}))
+        self.capture.write(proc.stdout, proc.stderr, {"exit_code": proc.returncode})
         if proc.returncode != 0:
             raise subprocess.CalledProcessError(proc.returncode, self.grader.cmd, proc.stdout, proc.stderr)
         return json.loads(proc.stdout)

@@ -21,10 +21,10 @@ The solution doesn't need to import trap or know it exists. It reads one environ
 
 ```
 TRAP_MANIFEST = {inputs_dir, outputs_dir}   # directory paths
-  inputs/{case_id}/  ──────────▶  solution  ──writes──▶  .trap/{task}/{ts}/{case_id}/  (= outputs_dir)
+  inputs/{case_id}/  ──────────▶  solution  ──writes──▶  .../{case_id}/solution/outputs/  (= outputs_dir)
 
-TRAPTASK_MANIFEST = {inputs_dir, expected_dir, outputs_dir}   # directory paths (expected_dir may be null)
-  expected/{case_id}/ + the outputs above  ──────────▶  judge  ──▶  {metrics: any JSON}
+TRAPTASK_MANIFEST = {inputs_dir, expected_dir, outputs_dir, run}   # dirs + run:{stdout,stderr,meta} paths
+  expected/{case_id}/ + the outputs/run above  ──────────▶  judge  ──▶  {metrics: any JSON}
 
   all case metrics  ──────────▶  grader  ──▶  {passed, score, ...}
 ```

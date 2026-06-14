@@ -20,19 +20,19 @@ Ownership:
 string (not a file path):
 - `inputs_dir` → absolute path of the `inputs/{case_id}/` directory; the solution
   scans/reads it itself (so nested input trees are supported, not just flat files).
-- `outputs_dir` → absolute path of the per-case directory the solution writes into.
-  The solution may write any files here (declared contract files and/or
-  dynamically-named ones); trap captures the whole directory.
+- `outputs_dir` → absolute path of the directory the solution writes into. The
+  solution **owns this directory exclusively** — trap never writes here, so any file
+  the solution drops (declared contract files and/or dynamically-named ones) is its
+  own. On disk this is `{case_id}/solution/outputs/`.
 
-Mirrors the task side's `TRAPTASK_MANIFEST`: every entry is an absolute
-**directory path** — `inputs_dir`, `expected_dir`, `outputs_dir` (the `_dir` suffix
-signals "this is a directory, scan it"). One mental model: "here are the
+Manifest values are **pure locations** — every value is a directory/file path (or
+`null`); trap never inlines interpreted data. One mental model: "here are the
 directories, read what you need." Directories (not pre-scanned `{name → path}`
 dicts) keep the contract lossless for nested trees and let the consumer choose its
 own representation; the consumer already knows the fixture filenames it authored.
 
 Solution may also receive content piped to stdin (declared via `inputs.stdin` in trap.yaml).
-stdout and stderr are always captured automatically.
+stdout/stderr/exit_code are always captured automatically (see the `run` block below).
 
 **trap.yaml format** (`tasks:` wrapper; `traptask` is optional, defaults to `../task`):
 ```yaml
@@ -61,14 +61,18 @@ tasks:
 
 **Task side** — `traptask.yaml` is optional. If absent, trap auto-discovers cases by scanning `inputs/` subdirectories and runs in output-only mode (no judge/grader/expected). When present:
 - `judge` and `grader` in traptask.yaml are optional; omitting either skips that step
-- judge receives `TRAPTASK_MANIFEST` (JSON string, not a file path): `inputs_dir`,
-  `expected_dir`, and `outputs_dir` are absolute **directory paths** (`expected_dir`
-  is `null` when the case has no `expected/` dir). The judge **scans these dirs
-  itself** — in `outputs_dir` it sees every captured file (`case_stdout`,
-  `case_stderr`, `case_meta.json`, plus anything the solution wrote), so
-  dynamically-named outputs are supported. It does not need its own `case_id`:
-  judging one case is a pure function of `(inputs_dir, expected_dir, outputs_dir)`,
-  and trap tracks which case it is.
+- judge receives `TRAPTASK_MANIFEST` (JSON string, not a file path) with two tiers:
+  - **filesystem directories** — `inputs_dir`, `expected_dir`, `outputs_dir` (all
+    absolute directory paths; `expected_dir` is `null` when the case has no
+    `expected/` dir). `outputs_dir` holds **only solution-written files** — trap's
+    run captures are *not* mixed in, so a judge can `iterdir()` it to enumerate
+    exactly what the solution produced (dynamic outputs supported).
+  - **`run`** — the solution run's standard-stream captures, all as file paths:
+    `{ "stdout": <path>, "stderr": <path>, "meta": <path> }`. `meta` points at a
+    JSON file `{exit_code, duration}`; the judge reads it the same way it reads
+    stdout. trap exposes locations, not values — it never inlines `exit_code`.
+  - the judge needs no `case_id`: judging one case is a pure function of
+    `(inputs_dir, expected_dir, outputs_dir, run)`, and trap tracks which case it is.
 - grader receives `TRAPTASK_MANIFEST` as the JSON list of per-case results (not the namespaced manifest)
 - `file_outputs` in traptask.yaml is an **optional, advisory** list of filenames the
   solution is expected to write — a published contract for solution authors. trap
@@ -78,15 +82,25 @@ tasks:
 
 **Filename convention**: `inputs_dir`, `expected_dir`, and `outputs_dir` are
 directory paths; the consumer joins them with conventional filenames including
-extension (`config.json`, `case_stdout`, `case_meta.json`, `expected.json`).
+extension (`config.json`, `expected.json`). `run.stdout`/`run.stderr`/`run.meta`
+are full file paths (read directly).
 
-**`.trap/` workspace**:
+**`.trap/` workspace** — each actor (solution, judge, grader) owns a directory; its
+run captures live there unprefixed (`stdout`/`stderr`/`meta.json`), keeping the
+solution's `outputs/` clean:
 ```
 .trap/
 └── {task}/
     ├── latest -> 2026-05-09T14:30:00/   # symlink to most recent run
     └── 2026-05-09T14:30:00/
-        ├── {case_id}/                    # case outputs dir (case_stdout, case_stderr, case_meta.json, solution-written files)
+        ├── {case_id}/
+        │   ├── solution/                 # solution actor
+        │   │   ├── outputs/              # = outputs_dir; solution-written files only
+        │   │   ├── stdout                # = run.stdout
+        │   │   ├── stderr                # = run.stderr
+        │   │   └── meta.json             # = run.meta  ({exit_code, duration})
+        │   └── judge/                    # judge actor: stdout / stderr / meta.json
+        ├── grader/                       # run-level grader: stdout / stderr / meta.json
         └── report.json                   # report for this run
 ```
 

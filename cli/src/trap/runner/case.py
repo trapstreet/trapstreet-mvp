@@ -5,31 +5,15 @@ import os
 import shlex
 import subprocess
 import time
-from dataclasses import dataclass
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from trap.cost import CostProxy
 from trap.models import CaseResult
 from trap.models.cost import CaseCost
+from trap.runner.capture import Capture
 
 if TYPE_CHECKING:
     from trap.runner.task import TaskRunner
-
-
-@dataclass
-class CaseOutputsPaths:
-    stdout: Path
-    stderr: Path
-    meta: Path
-
-    @classmethod
-    def from_dir(cls, outputs_dir: Path) -> CaseOutputsPaths:
-        return cls(
-            stdout=outputs_dir / "case_stdout",
-            stderr=outputs_dir / "case_stderr",
-            meta=outputs_dir / "case_meta.json",
-        )
 
 
 class CaseRunner:
@@ -37,8 +21,11 @@ class CaseRunner:
         self.runner = runner
         self.case_id = case_id
         self.case_inputs_dir = runner.task_inputs_dir / case_id
-        self.case_outputs_dir = runner.task_outputs_dir / case_id
-        self.case_outputs_paths = CaseOutputsPaths.from_dir(self.case_outputs_dir)
+        # The solution actor owns `{case_id}/solution/`: it writes artefacts into
+        # `outputs/`, and trap captures its run into sibling stdout/stderr/meta.
+        self.solution_dir = runner.task_outputs_dir / case_id / "solution"
+        self.solution_outputs_dir = self.solution_dir / "outputs"
+        self.capture = Capture.from_dir(self.solution_dir)
 
     @property
     def _stdin(self) -> str:
@@ -52,12 +39,12 @@ class CaseRunner:
         return json.dumps(
             {
                 "inputs_dir": str(self.case_inputs_dir.resolve()),
-                "outputs_dir": str(self.case_outputs_dir.resolve()),
+                "outputs_dir": str(self.solution_outputs_dir.resolve()),
             }
         )
 
     def run(self) -> CaseResult:
-        self.case_outputs_dir.mkdir(parents=True, exist_ok=True)
+        self.solution_outputs_dir.mkdir(parents=True, exist_ok=True)
 
         task = self.runner.task
 
@@ -94,10 +81,10 @@ class CaseRunner:
                 if partial.calls > 0:
                     case_cost = partial
 
-        self.case_outputs_paths.stdout.write_text(proc.stdout)
-        self.case_outputs_paths.stderr.write_text(proc.stderr)
-        self.case_outputs_paths.meta.write_text(
-            json.dumps({"exit_code": proc.returncode, "duration": duration})
+        self.capture.write(
+            proc.stdout,
+            proc.stderr,
+            {"exit_code": proc.returncode, "duration": duration},  # get cost in here in the future
         )
         return CaseResult(
             case_id=self.case_id, exit_code=proc.returncode, duration=duration, metrics=None, cost=case_cost

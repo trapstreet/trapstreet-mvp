@@ -4,29 +4,13 @@ import json
 import os
 import shlex
 import subprocess
-from dataclasses import dataclass
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from trap.models import SubprocessCmd
+from trap.runner.capture import Capture
 
 if TYPE_CHECKING:
     from trap.runner.task import TaskRunner
-
-
-@dataclass
-class JudgeOutputsPaths:
-    stdout: Path
-    stderr: Path
-    meta: Path
-
-    @classmethod
-    def from_dir(cls, outputs_dir: Path) -> JudgeOutputsPaths:
-        return cls(
-            stdout=outputs_dir / "judge_stdout",
-            stderr=outputs_dir / "judge_stderr",
-            meta=outputs_dir / "judge_meta.json",
-        )
 
 
 class JudgeRunner:
@@ -34,9 +18,14 @@ class JudgeRunner:
         self.runner = runner
         self.case_id = case_id
         self.case_inputs_dir = runner.task_inputs_dir / case_id
-        self.case_outputs_dir = runner.task_outputs_dir / case_id
         self.case_expected_dir = runner.task_expected_dir / case_id
-        self.judge_outputs_paths = JudgeOutputsPaths.from_dir(self.case_outputs_dir)
+        case_dir = runner.task_outputs_dir / case_id
+        # The judge reads the solution actor's outputs + run captures, and writes
+        # its own run captures into a sibling `judge/` directory.
+        self.solution_dir = case_dir / "solution"
+        self.solution_outputs_dir = self.solution_dir / "outputs"
+        self.judge_dir = case_dir / "judge"
+        self.capture = Capture.from_dir(self.judge_dir)
 
         assert runner.traptask_obj.judge is not None
         self.judge: SubprocessCmd = runner.traptask_obj.judge
@@ -44,11 +33,17 @@ class JudgeRunner:
     @property
     def _manifest(self) -> str:
         expected = self.case_expected_dir
+        run = Capture.from_dir(self.solution_dir)
         return json.dumps(
             {
                 "inputs_dir": str(self.case_inputs_dir.resolve()),
                 "expected_dir": str(expected.resolve()) if expected.exists() else None,
-                "outputs_dir": str(self.case_outputs_dir.resolve()),
+                "outputs_dir": str(self.solution_outputs_dir.resolve()),
+                "run": {
+                    "stdout": str(run.stdout.resolve()),
+                    "stderr": str(run.stderr.resolve()),
+                    "meta": str(run.meta.resolve()),
+                },
             }
         )
 
@@ -60,9 +55,7 @@ class JudgeRunner:
             capture_output=True,
             text=True,
         )
-        self.judge_outputs_paths.stdout.write_text(proc.stdout)
-        self.judge_outputs_paths.stderr.write_text(proc.stderr)
-        self.judge_outputs_paths.meta.write_text(json.dumps({"exit_code": proc.returncode}))
+        self.capture.write(proc.stdout, proc.stderr, {"exit_code": proc.returncode})
 
         if proc.returncode != 0:
             raise subprocess.CalledProcessError(proc.returncode, self.judge.cmd, proc.stdout, proc.stderr)
