@@ -23,16 +23,13 @@ The command is `tp`.
 ## How it works
 
 ```
-inputs/{case_id}/   ──[INPUTS env var]──▶  solution  ──[OUTPUTS env var]──▶  .trap/{task}/{ts}/{case_id}/
-expected/{case_id}/                                                                 │
-       │                                                                            │
-       └──────────────────────── judge  ◀──────────────────────────────────────────┘
-                                   │
-                            {metrics: any JSON}
-                                   │
-                  [collect all cases, hand to grader]
-                                   │
-                                grader
+TRAP_MANIFEST = {inputs, outputs_dir}
+  inputs/{case_id}/  ──────────▶  solution  ──writes──▶  .trap/{task}/{ts}/{case_id}/  (= outputs_dir)
+
+TRAPTASK_MANIFEST = {inputs, outputs_dir, expected}
+  expected/{case_id}/ + the outputs above  ──────────▶  judge  ──▶  {metrics: any JSON}
+
+  all case metrics  ──────────▶  grader  ──▶  {passed, score, ...}
 ```
 
 Two roles, two directories, one IO contract:
