@@ -7,19 +7,19 @@ import subprocess
 from typing import TYPE_CHECKING, Any
 
 from trap.models import SubprocessCmd
-from trap.runner.layout import CaseLayout
 
 if TYPE_CHECKING:
+    from trap.runner.layout import CaseLayout
     from trap.runner.task import TaskRunner
 
 
 class JudgeRunner:
-    def __init__(self, runner: TaskRunner, case_id: str) -> None:
+    def __init__(self, runner: TaskRunner, case_id: str, layout: CaseLayout) -> None:
         self.runner = runner
         self.case_id = case_id
         self.case_inputs_dir = runner.task_inputs_dir / case_id  # task-repo side
         self.case_expected_dir = runner.task_expected_dir / case_id  # task-repo side
-        self.layout = CaseLayout.for_case(runner.run_dir, case_id)  # workspace side
+        self.layout = layout  # workspace side
 
         assert runner.traptask_obj.judge is not None
         self.judge: SubprocessCmd = runner.traptask_obj.judge

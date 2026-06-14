@@ -9,6 +9,7 @@ from trap.models import CaseResult, Task, TrapTask, TrapTaskCase
 from trap.runner.case import CaseRunner
 from trap.runner.grader import GraderRunner
 from trap.runner.judge import JudgeRunner
+from trap.runner.layout import CaseLayout
 
 
 class TaskRunner:
@@ -53,9 +54,10 @@ class TaskRunner:
         for case in cases:
             if on_case_start is not None:
                 on_case_start(case.id)
-            result = CaseRunner(self, case.id).run()
+            layout = CaseLayout.for_case(self.run_dir, case.id)
+            result = CaseRunner(self, case.id, layout).run()
             if self.traptask_obj.judge is not None:
-                metrics = JudgeRunner(self, case.id).run()
+                metrics = JudgeRunner(self, case.id, layout).run()
                 result = result.model_copy(update={"metrics": metrics})
             if on_case_done is not None:
                 on_case_done(result)
