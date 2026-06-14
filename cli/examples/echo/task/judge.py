@@ -9,7 +9,7 @@ if __name__ == "__main__":
 
     stdout = (outputs_dir / "case_stdout").read_text().strip()
     exit_code = json.loads((outputs_dir / "case_meta.json").read_text())["exit_code"]
-    expected = json.loads(Path(data["expected"]["expected.json"]).read_text())
+    expected = json.loads((Path(data["expected_dir"]) / "expected.json").read_text())
 
     results = []
     if "exit_code" in expected:

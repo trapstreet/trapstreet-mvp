@@ -7,10 +7,10 @@ from pathlib import Path
 
 text = sys.stdin.read()
 manifest = json.loads(os.environ["TRAP_MANIFEST"])
-inputs = manifest["inputs"]
+inputs_dir = Path(manifest["inputs_dir"])
 outputs_dir = Path(manifest["outputs_dir"])
 
-with open(inputs["config.json"]) as f:
+with open(inputs_dir / "config.json") as f:
     config = json.load(f)
 
 top_n: int = config.get("top_n", 10)

@@ -23,10 +23,10 @@ The command is `tp`.
 ## How it works
 
 ```
-TRAP_MANIFEST = {inputs, outputs_dir}
+TRAP_MANIFEST = {inputs_dir, outputs_dir}   # directory paths
   inputs/{case_id}/  ──────────▶  solution  ──writes──▶  .trap/{task}/{ts}/{case_id}/  (= outputs_dir)
 
-TRAPTASK_MANIFEST = {inputs, outputs_dir, expected}
+TRAPTASK_MANIFEST = {inputs_dir, expected_dir, outputs_dir}   # directory paths (expected_dir may be null)
   expected/{case_id}/ + the outputs above  ──────────▶  judge  ──▶  {metrics: any JSON}
 
   all case metrics  ──────────▶  grader  ──▶  {passed, score, ...}

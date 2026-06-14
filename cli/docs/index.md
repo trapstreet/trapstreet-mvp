@@ -17,13 +17,13 @@ Two roles, two directories, connected only by a small IO contract:
 | **Solution author** | `trap.yaml`, the solution code | how to invoke the solution, which inputs to feed it, which outputs it produces |
 | **Task author** | `traptask.yaml`, `judge.py`, `grader.py`, `inputs/`, `expected/` | the test cases, scoring logic, expected outputs |
 
-The solution doesn't need to import trap or know it exists. It reads one environment variable (`TRAP_MANIFEST`, a JSON string with input file paths and the output directory) and runs.
+The solution doesn't need to import trap or know it exists. It reads one environment variable (`TRAP_MANIFEST`, a JSON string with the input directory and the output directory) and runs.
 
 ```
-TRAP_MANIFEST = {inputs, outputs_dir}
+TRAP_MANIFEST = {inputs_dir, outputs_dir}   # directory paths
   inputs/{case_id}/  ──────────▶  solution  ──writes──▶  .trap/{task}/{ts}/{case_id}/  (= outputs_dir)
 
-TRAPTASK_MANIFEST = {inputs, outputs_dir, expected}
+TRAPTASK_MANIFEST = {inputs_dir, expected_dir, outputs_dir}   # directory paths (expected_dir may be null)
   expected/{case_id}/ + the outputs above  ──────────▶  judge  ──▶  {metrics: any JSON}
 
   all case metrics  ──────────▶  grader  ──▶  {passed, score, ...}

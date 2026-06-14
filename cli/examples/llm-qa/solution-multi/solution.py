@@ -9,8 +9,8 @@ from pathlib import Path
 
 from openai import OpenAI
 
-inputs = json.loads(os.environ["TRAP_MANIFEST"])["inputs"]
-question = Path(inputs["question.txt"]).read_text().strip()
+inputs_dir = Path(json.loads(os.environ["TRAP_MANIFEST"])["inputs_dir"])
+question = (inputs_dir / "question.txt").read_text().strip()
 
 client = OpenAI()
 response = client.chat.completions.create(

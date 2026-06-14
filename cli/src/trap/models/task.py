@@ -29,7 +29,7 @@ class TrapTask(BaseModel):
     judge: SubprocessCmd | None = None  # None → skip per-case scoring
     grader: SubprocessCmd | None = None  # None → skip overall aggregation
     # Advisory list of output filenames the solution is expected to write into
-    # the manifest's `outputs_dir`. Published purely as a contract for solution
-    # authors; trap never enforces it — the judge is the sole arbiter and scans
-    # outputs_dir freely (so dynamically-named outputs stay supported).
+    # the manifest's `outputs` directory. Published purely as a contract for
+    # solution authors; trap never enforces it — the judge is the sole arbiter
+    # and scans `outputs` freely (so dynamically-named outputs stay supported).
     file_outputs: tuple[str, ...] = ()

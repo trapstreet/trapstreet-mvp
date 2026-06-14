@@ -41,19 +41,14 @@ class JudgeRunner:
         assert runner.traptask_obj.judge is not None
         self.judge: SubprocessCmd = runner.traptask_obj.judge
 
-    @staticmethod
-    def _namespace(dir_path: Path) -> dict[str, str]:
-        if not dir_path.exists():
-            return {}
-        return {f.name: str(f.resolve()) for f in sorted(dir_path.iterdir()) if f.is_file()}
-
     @property
     def _manifest(self) -> str:
+        expected = self.case_expected_dir
         return json.dumps(
             {
-                "inputs": self._namespace(self.case_inputs_dir),
+                "inputs_dir": str(self.case_inputs_dir.resolve()),
+                "expected_dir": str(expected.resolve()) if expected.exists() else None,
                 "outputs_dir": str(self.case_outputs_dir.resolve()),
-                "expected": self._namespace(self.case_expected_dir),
             }
         )
 

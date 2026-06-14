@@ -49,8 +49,12 @@ class CaseRunner:
 
     @property
     def _manifest(self) -> str:
-        inputs = {f.name: str(f.resolve()) for f in sorted(self.case_inputs_dir.iterdir()) if f.is_file()}
-        return json.dumps({"inputs": inputs, "outputs_dir": str(self.case_outputs_dir.resolve())})
+        return json.dumps(
+            {
+                "inputs_dir": str(self.case_inputs_dir.resolve()),
+                "outputs_dir": str(self.case_outputs_dir.resolve()),
+            }
+        )
 
     def run(self) -> CaseResult:
         self.case_outputs_dir.mkdir(parents=True, exist_ok=True)
