@@ -71,9 +71,10 @@ tasks:
   - the judge needs no `case_id`: judging one case is a pure function of
     `(inputs_dir, expected_dir, outputs_dir, run)`, and trap tracks which case it is.
 - grader receives `TRAPTASK_MANIFEST` as the JSON list of per-case results (not the namespaced manifest)
-- `file_outputs` in traptask.yaml is an **optional, advisory** list of filenames the
-  solution is expected to write — a published contract for solution authors. trap
-  never enforces it; the judge is the sole arbiter. Omit for dynamic outputs.
+- `declared_outputs` in traptask.yaml is an **optional, advisory** declaration of
+  what a solution produces — output filenames and/or the tokens `stdout`/`stderr`
+  for the standard streams. A published contract for solution authors; trap never
+  enforces it, the judge is the sole arbiter. Omit for dynamic outputs.
 - judge/grader write their result JSON to **stdout**; trap captures and stores it as `metrics`
 - `manifest_envvar` in traptask.yaml overrides the env var name (default `TRAPTASK_MANIFEST`)
 

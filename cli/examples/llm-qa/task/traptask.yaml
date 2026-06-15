@@ -2,6 +2,10 @@ dirs:
   inputs: inputs/
   expected: expected/
 
+# This solution answers via stdout — the judge reads run.stdout.
+declared_outputs:
+  - stdout
+
 cases:
   - id: capital_of_france
     description: LLM identifies the capital of France

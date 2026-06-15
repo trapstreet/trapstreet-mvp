@@ -6,7 +6,7 @@ import shlex
 import subprocess
 from typing import TYPE_CHECKING, Any
 
-from trap.models import SubprocessCmd
+from trap.models import SubprocessConfig
 
 if TYPE_CHECKING:
     from trap.runner.layout import CaseLayout
@@ -22,7 +22,7 @@ class JudgeRunner:
         self.layout = layout  # workspace side
 
         assert runner.traptask_obj.judge is not None
-        self.judge: SubprocessCmd = runner.traptask_obj.judge
+        self.judge: SubprocessConfig = runner.traptask_obj.judge
 
     @property
     def _manifest(self) -> str:

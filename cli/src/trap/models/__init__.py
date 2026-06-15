@@ -4,7 +4,7 @@ from .config import CostConfig, Task, TaskSource, TrapConfig
 from .cost import CaseCost, ModelCost
 from .report import ReportData, Summary
 from .results import CaseResult
-from .task import DirsConfig, SubprocessCmd, TrapTask, TrapTaskCase
+from .task import DirsConfig, SubprocessConfig, TrapTask, TrapTaskCase
 
 __all__ = [
     "CaseCost",
@@ -13,7 +13,7 @@ __all__ = [
     "DirsConfig",
     "ModelCost",
     "ReportData",
-    "SubprocessCmd",
+    "SubprocessConfig",
     "Summary",
     "Task",
     "TaskSource",

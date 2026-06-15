@@ -29,13 +29,12 @@ class TrapConfig(BaseModel):
 class Task(BaseModel):
     name: str = ""
     description: str = ""
-    cmd: str
+    cmd: str  # run via shlex.split, cwd = the trap.yaml directory
     traptask: TaskSource = TaskSource()  # local path or git+ URL (+ optional clone_to / init_cmd)
     stdin: str | None = None  # optional: filename in inputs/{case_id}/ piped to the solution's stdin
     timeout: int = 30
-    # env var holding the run manifest (inputs → directory path; outputs →
-    # directory path), injected by the runner; override if the solution needs
-    # another name
+    # env var holding the run manifest (inputs_dir / outputs_dir → directory paths),
+    # injected by the runner; override if the solution needs another name
     manifest_envvar: str = "TRAP_MANIFEST"
     # self-reported solution profile — e.g. {model, framework, max_tokens}.
     # Free-form; never validated by trap or trapstreet. Plumbed through to

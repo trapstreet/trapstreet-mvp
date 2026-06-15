@@ -4,8 +4,9 @@ from __future__ import annotations
 from pydantic import BaseModel
 
 
-class SubprocessCmd(BaseModel):
-    # cmd is relative to traptask.yaml's directory and run via shlex.split
+class SubprocessConfig(BaseModel):
+    # How to invoke the judge/grader subprocess: the command (run via shlex.split,
+    # cwd = traptask.yaml's directory) plus the env var carrying its manifest.
     cmd: str
     manifest_envvar: str = "TRAPTASK_MANIFEST"
 
@@ -25,11 +26,12 @@ class TrapTaskCase(BaseModel):
 
 class TrapTask(BaseModel):
     dirs: DirsConfig = DirsConfig()
+    # Advisory declaration of what a solution produces: output filenames written
+    # into the manifest's `outputs` dir, and/or the tokens `stdout` / `stderr` for
+    # the standard streams. Purely a published contract for solution authors — trap
+    # never enforces it; the judge is the sole arbiter (it scans `outputs` and reads
+    # the `run` captures freely, so dynamic outputs stay supported). Omit if unused.
+    declared_outputs: tuple[str, ...] = ()
     cases: tuple[TrapTaskCase, ...]
-    judge: SubprocessCmd | None = None  # None → skip per-case scoring
-    grader: SubprocessCmd | None = None  # None → skip overall aggregation
-    # Advisory list of output filenames the solution is expected to write into
-    # the manifest's `outputs` directory. Published purely as a contract for
-    # solution authors; trap never enforces it — the judge is the sole arbiter
-    # and scans `outputs` freely (so dynamically-named outputs stay supported).
-    file_outputs: tuple[str, ...] = ()
+    judge: SubprocessConfig | None = None  # None → skip per-case scoring
+    grader: SubprocessConfig | None = None  # None → skip overall aggregation

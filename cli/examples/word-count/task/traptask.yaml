@@ -2,6 +2,13 @@ dirs:
   inputs: inputs/
   expected: expected/
 
+# Advisory contract for solution authors — what a solution produces (output
+# filenames, and/or stdout/stderr for the standard streams). Not enforced by
+# trap; the judge scans outputs and decides. Omit for dynamically-named outputs.
+declared_outputs:
+  - frequencies.json
+  - summary.json
+
 cases:
   - id: basic
     description: word frequencies and summary across three words
@@ -16,13 +23,6 @@ cases:
 
   - id: empty
     description: empty text produces zero counts and empty top_words
-
-# Advisory contract for solution authors — the files a solution should write
-# into the manifest's outputs directory. Not enforced by trap; the judge scans
-# outputs and decides. Omit for tasks with dynamically-named outputs.
-file_outputs:
-  - frequencies.json
-  - summary.json
 
 judge:
   cmd: uv run python judge.py

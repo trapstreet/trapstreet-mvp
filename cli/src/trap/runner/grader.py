@@ -6,7 +6,7 @@ import shlex
 import subprocess
 from typing import TYPE_CHECKING, Any
 
-from trap.models import CaseResult, SubprocessCmd
+from trap.models import CaseResult, SubprocessConfig
 from trap.runner.capture import Capture
 
 if TYPE_CHECKING:
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class GraderRunner:
     def __init__(self, runner: TaskRunner, case_results: tuple[CaseResult, ...]) -> None:
         assert runner.traptask_obj.grader is not None
-        self.grader: SubprocessCmd = runner.traptask_obj.grader
+        self.grader: SubprocessConfig = runner.traptask_obj.grader
         self.runner = runner
         self.cases = case_results
         # Run-level grader gets its own `grader/` directory next to report.json.
