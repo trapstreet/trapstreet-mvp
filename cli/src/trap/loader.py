@@ -91,13 +91,18 @@ class TrapTaskLoader:
         return TrapTask(cases=tuple(TrapTaskCase(id=case_id) for case_id in case_ids))
 
     @classmethod
-    def from_task(cls, task: Task, trap_dir: Path) -> TrapTaskLoader:
+    def from_task(cls, task: Task, trap_dir: Path, setup: bool = False) -> TrapTaskLoader:
         """Resolve traptask.yaml from a Task's traptask field and the trap.yaml directory.
 
         Mirrors `TrapLoader.from_solution`: `source` is a local path or a git+ URL.
         A URL clones into `clone_to` (omitted → hidden cache .trap/repos/<repo>,
         since the task is a dependency); a local path uses it in place and rejects
         `clone_to`. Raises GitOpsError on a bad spec (caller maps it to a CLI error).
+
+        The task's `setup_cmd` (declared in its traptask.yaml, so it travels with the
+        task version) prepares the checkout. It auto-runs when a remote pull brought
+        new code, and otherwise only when `setup` is set (the `tp run --setup`
+        escape hatch covering pinned/up-to-date clones and local sources).
         """
         from trap.git_ops import GitOpsError, ParsedGitUrl, RemoteRepo
 
@@ -107,15 +112,17 @@ class TrapTaskLoader:
             dest = spec.clone_to or Path(".trap") / "repos" / parsed.basename
             remote_repo = RemoteRepo(parsed, (trap_dir / dest).resolve())
             is_local_changed = remote_repo.ensure()
-            if is_local_changed and spec.init_cmd:
-                # raises subprocess.CalledProcessError on non-zero exit
-                subprocess.run(spec.init_cmd, shell=True, cwd=remote_repo.local_dir, check=True)
             traptask_dir = remote_repo.local_dir
         else:
             if spec.clone_to is not None:
                 raise GitOpsError("traptask.clone_to only applies to a remote (git URL) source")
+            is_local_changed = False
             traptask_dir = (trap_dir / spec.source).resolve()
-        return cls(traptask_dir / "traptask.yaml")
+        loader = cls(traptask_dir / "traptask.yaml")
+        if (is_local_changed or setup) and loader.traptask.setup_cmd:
+            # raises subprocess.CalledProcessError on non-zero exit
+            subprocess.run(loader.traptask.setup_cmd, shell=True, cwd=loader.task_dir, check=True)
+        return loader
 
     @property
     def cases(self) -> tuple[TrapTaskCase, ...]:

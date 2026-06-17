@@ -18,8 +18,6 @@ class TaskSource(BaseModel):
     # clone target for a git+ source (relative to trap.yaml, or absolute);
     # omitted → hidden cache .trap/repos/<repo>. Only valid when source is a URL.
     clone_to: Path | None = None
-    # shell command to run in the checkout after a fresh clone or branch update
-    init_cmd: str | None = None
 
 
 class TrapConfig(BaseModel):
@@ -30,7 +28,7 @@ class Task(BaseModel):
     name: str = ""
     description: str = ""
     cmd: str  # run via shlex.split, cwd = the trap.yaml directory
-    traptask: TaskSource = TaskSource()  # local path or git+ URL (+ optional clone_to / init_cmd)
+    traptask: TaskSource = TaskSource()  # local path or git+ URL (+ optional clone_to)
     stdin: str | None = None  # optional: filename in inputs/{case_id}/ piped to the solution's stdin
     timeout: int = 30
     # env var holding the run manifest (inputs_dir / outputs_dir → directory paths),

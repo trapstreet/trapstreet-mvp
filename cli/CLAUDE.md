@@ -44,7 +44,6 @@ tasks:
       source: ../task            # local path or git+ URL (polymorphic, like --solution)
       # source: git+https://github.com/org/repo@rev#subdirectory=X   # remote → cloned into clone_to
       # clone_to: .trap/repos/task   # optional clone target for a remote (default: hidden cache)
-      # init_cmd: uv sync        # optional: run in the checkout after a clone / fast-forward
     stdin: input.txt             # optional: pipe this input file to the solution's stdin
     timeout: 30                  # default 30s
     manifest_envvar: TRAP_MANIFEST   # override the env var name if the solution needs another
@@ -77,6 +76,13 @@ tasks:
   enforces it, the judge is the sole arbiter. Omit for dynamic outputs.
 - judge/grader write their result JSON to **stdout**; trap captures and stores it as `metrics`
 - `manifest_envvar` in traptask.yaml overrides the env var name (default `TRAPTASK_MANIFEST`)
+- `setup_cmd` in traptask.yaml is an **optional** shell command that prepares the
+  checkout (e.g. `uv sync`), run via the shell with cwd = the task dir. It is
+  **task-author owned by design** — living with the task version means every
+  solution that points at the same task commit gets an identical setup, so runs
+  stay reproducible and comparable (a solution author cannot diverge it). trap
+  auto-runs it when a remote pull brings new code (fresh clone or fast-forward);
+  for an up-to-date/pinned clone or a local source, force it with `tp run --setup`
 
 **Filename convention**: `inputs_dir`, `expected_dir`, and `outputs_dir` are
 directory paths; the consumer joins them with conventional filenames including

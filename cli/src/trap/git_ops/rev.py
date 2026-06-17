@@ -32,7 +32,7 @@ class RevStrategy(ABC):
     def reconcile(self, repo: git.Repo, root: Path, progress_func: ProgressCallback) -> bool:
         """Verify/update an existing clone (remote already validated).
 
-        Returns True if local code changed (caller then re-runs init_cmd).
+        Returns True if local code changed (caller then auto-runs setup_cmd).
         """
 
 

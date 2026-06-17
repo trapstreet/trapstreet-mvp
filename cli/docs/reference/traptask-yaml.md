@@ -26,6 +26,8 @@ judge:
 grader:
   cmd: .venv/bin/python grader.py
   payload_envvar: TRAPTASK_PAYLOAD
+
+setup_cmd: uv sync   # optional: prepare the checkout (e.g. install judge deps)
 ```
 
 ## Fields
@@ -65,3 +67,11 @@ Optional. If absent, no final aggregation step runs.
 |---|---|---|
 | `cmd` | — | Command to run the grader; parsed via `shlex.split`, cwd is the task directory |
 | `payload_envvar` | `TRAPTASK_PAYLOAD` | Name of the env var injected with the full results payload |
+
+### `setup_cmd`
+
+Optional shell command that prepares the task checkout (e.g. `uv sync` to install the judge's dependencies). Run via the shell, cwd is the task directory.
+
+Because it lives in `traptask.yaml`, the setup travels with the task version, so every solution author who points at the same task commit gets an identical environment — runs stay reproducible and comparable.
+
+It **auto-runs** when a remote pull brings new code (a fresh clone or a branch fast-forward). For an already-current clone, a pinned-SHA clone, or a local task source it does not run automatically; force it with `tp run --setup`.

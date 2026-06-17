@@ -35,7 +35,7 @@ class RemoteRepo:
         """Clone (fresh) or sync (existing) the repo into `root`.
 
         Returns True when code changed (fresh clone OR branch fast-forwarded) —
-        callers run init_cmd only then.  Read `local_dir` for the resolved path.
+        callers auto-run setup_cmd then.  Read `local_dir` for the resolved path.
         """
         return self._sync(progress_func) if self.root.exists() else self._clone(progress_func)
 

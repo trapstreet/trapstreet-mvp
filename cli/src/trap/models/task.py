@@ -35,3 +35,9 @@ class TrapTask(BaseModel):
     cases: tuple[TrapTaskCase, ...]
     judge: SubprocessConfig | None = None  # None → skip per-case scoring
     grader: SubprocessConfig | None = None  # None → skip overall aggregation
+    # shell command (run via shell, cwd = traptask.yaml's directory) that prepares
+    # the task checkout — e.g. `uv sync` to install the judge's deps. Task-author
+    # owned so a given task version sets itself up identically for every solution,
+    # keeping runs reproducible and comparable. Auto-runs when a remote pull brings
+    # new code; otherwise only on `tp run --setup`.
+    setup_cmd: str | None = None

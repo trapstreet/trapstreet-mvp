@@ -42,6 +42,13 @@ def run(
     tags: Annotated[list[str] | None, typer.Option("--tag", "-t")] = None,
     output: Annotated[OutputFormat, typer.Option("--output", "-o")] = OutputFormat.rich,
     fail_fast: Annotated[bool, typer.Option("--fail-fast")] = False,
+    setup: Annotated[
+        bool,
+        typer.Option(
+            "--setup",
+            help="Force-run the task's setup_cmd even when no remote pull brought new code.",
+        ),
+    ] = False,
     workspace: Annotated[Path, typer.Option("--workspace", "-w")] = Path(".trap"),
 ) -> None:
     """Run a task against a solution.
@@ -59,7 +66,7 @@ def run(
             ),
         )
         task_obj = trap_yaml_loader.resolve_task(task)
-        task_yaml_loader = TrapTaskLoader.from_task(task_obj, trap_yaml_loader.trap_dir)
+        task_yaml_loader = TrapTaskLoader.from_task(task_obj, trap_yaml_loader.trap_dir, setup=setup)
     except (GitOpsError, subprocess.CalledProcessError) as e:
         raise _die(e) from None
 
