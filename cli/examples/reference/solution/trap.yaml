@@ -1,0 +1,74 @@
+# trap.yaml — the SOLUTION author's config (one solution per file).
+#
+# This is an EXHAUSTIVE reference: every field is shown. Lines tagged
+# "[optional]" can be deleted; their default is noted. A real trap.yaml is
+# usually just `cmd:` plus a one-line `tasks:` entry — see the bottom for the
+# minimal form.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Solution — the program under test. These settings are invariant across the
+# tasks below, so they live at the top level (not repeated per task).
+# ─────────────────────────────────────────────────────────────────────────────
+
+cmd: uv run python solution.py    # [required] shell command, run via shlex.split,
+                                  #            cwd = this trap.yaml's directory.
+
+stdin: input.json                 # [optional] default: null. Filename inside
+                                  #            inputs/<case>/ piped to the solution's
+                                  #            stdin. (The solution also receives a run
+                                  #            manifest — see manifest_envvar — with the
+                                  #            input/output directory paths.)
+
+manifest_envvar: TRAP_MANIFEST    # [optional] default: TRAP_MANIFEST. Env var carrying
+                                  #            the run manifest JSON {inputs_dir,
+                                  #            outputs_dir}. Override only if the solution
+                                  #            already uses this variable name.
+
+name: claude-sonnet-baseline      # [optional] default: null → server auto-assigns a
+                                  #            serial name. Leaderboard identity: lets one
+                                  #            person submit several named agents.
+
+metadata:                         # [optional] default: {}. Free-form, never validated;
+  model: claude-sonnet-4          #            surfaced on the run page as "Solution
+  framework: my-agent             #            metadata". Put whatever describes your run.
+  max_tokens: 4096
+
+cost:                             # [optional] OMIT this block to auto-detect from env
+  enabled: true                   #            (tracking turns on when an API key env var
+                                  #            is present). Set enabled: false to disable.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Tasks — the task bindings this solution is run against.
+# Each map KEY is the task name (it is BOTH the local run-dir name AND the
+# trapstreet task_id). `tp run <key>` selects one; `tp run` with no argument
+# uses the first entry.
+# ─────────────────────────────────────────────────────────────────────────────
+
+tasks:
+  example-task:                   # [required] at least one entry; the key is the name.
+
+    description: optional label   # [optional] default: "". Shown in the report header.
+
+    traptask:                     # [optional] the whole block defaults to {source: ../task}.
+      source: ../task             # [required-in-block] EITHER a local path (relative to
+                                  #   this trap.yaml) OR a git+ URL. Pick one form:
+                                  #     local : ../task
+                                  #     remote: git+https://github.com/org/repo@<rev>#subdirectory=path
+      # clone_to: .trap/repos/task  # [optional] ONLY valid when source is a git+ URL.
+                                  #   default: hidden cache .trap/repos/<repo>. Setting it
+                                  #   for a LOCAL source is an error.
+
+    timeout: 30                   # [optional] default: 30. Max seconds per case run.
+
+  # A second binding is just another key — same solution, different task/version:
+  # other-task:
+  #   traptask:
+  #     source: git+https://github.com/acme/another-task@v1.2.0
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Minimal equivalent (everything optional removed):
+#
+#   cmd: uv run python solution.py
+#   tasks:
+#     example-task: {}            # traptask defaults to ../task
+# ─────────────────────────────────────────────────────────────────────────────
