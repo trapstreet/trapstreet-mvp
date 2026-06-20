@@ -1,8 +1,9 @@
+cmd: uv run solution.py
+metadata:
+  provider: anthropic
+  tool: claude-code
+
 tasks:
   test:
-    cmd: uv run solution.py
     traptask:
       source: ../task
-    metadata:
-      provider: anthropic
-      tool: claude-code

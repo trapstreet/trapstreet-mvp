@@ -1,8 +1,9 @@
+cmd: sh -c 'set -a && . .env && set +a && uv run solution.py'
+metadata:
+  provider: anthropic
+  model: claude-sonnet-4-20250514
+
 tasks:
   test:
-    cmd: sh -c 'set -a && . .env && set +a && uv run solution.py'
     traptask:
       source: ../task
-    metadata:
-      provider: anthropic
-      model: claude-sonnet-4-20250514

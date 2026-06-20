@@ -35,24 +35,31 @@ Solution may also receive content piped to stdin (declared via the top-level `st
 field in trap.yaml — a single input filename). stdout/stderr/exit_code are always
 captured automatically (see the `run` block below).
 
-**trap.yaml format** (`tasks:` wrapper; `traptask` is optional, defaults to `../task`):
+**trap.yaml format** — a trap.yaml *is* one solution's file: its invariant
+settings (`cmd`, `stdin`, `manifest_envvar`, `metadata`, `name`, `cost`) sit at
+the top level, with `tasks:` as the one nested collection of task bindings it is
+run against. Only per-task knobs (`traptask`, `description`, `timeout`) live under
+each task entry:
 ```yaml
-tasks:
+cmd: uv run python solution.py
+stdin: input.txt               # optional: pipe this input file to the solution's stdin
+manifest_envvar: TRAP_MANIFEST   # override the env var name if the solution needs another
+name: claude-sonnet-baseline   # optional leaderboard identity (else server auto-assigns)
+metadata:                      # optional self-reported profile (model/framework/...)
+  framework: stdlib-python
+# cost: {enabled: false}       # optional; omit to auto-detect from env
+
+tasks:                         # task bindings, keyed by name; `traptask` defaults to ../task
   test:
-    cmd: uv run python solution.py
-    traptask:                    # task source; whole block optional, defaults to ../task
-      source: ../task            # local path or git+ URL (polymorphic, like --solution)
+    traptask:                  # task source; whole block optional, defaults to ../task
+      source: ../task          # local path or git+ URL (polymorphic, like --solution)
       # source: git+https://github.com/org/repo@rev#subdirectory=X   # remote → cloned into clone_to
       # clone_to: .trap/repos/task   # optional clone target for a remote (default: hidden cache)
-    stdin: input.txt             # optional: pipe this input file to the solution's stdin
-    timeout: 30                  # default 30s
-    manifest_envvar: TRAP_MANIFEST   # override the env var name if the solution needs another
+    timeout: 30                # default 30s
 
-  run:                           # second task; same traptask, different cmd or stdin
-    cmd: uv run python solution.py
+  run:                         # second binding; same solution, different task source
     traptask:
       source: ../task
-    stdin: input.txt
 ```
 
 **Task side** — `traptask.yaml` is optional. If absent, trap auto-discovers cases by scanning `inputs/` subdirectories and runs in output-only mode (no judge/grader/expected). When present:
@@ -188,13 +195,13 @@ pricing table (e.g. Mistral models), token counts are tracked but `cost_usd` is 
 
 **trap.yaml**:
 ```yaml
+cmd: uv run python solution.py
+cost:
+  enabled: false   # omit to auto-detect from env
 tasks:
   test:
-    cmd: uv run python solution.py
     traptask:
       source: ../task
-    cost:
-      enabled: false   # omit to auto-detect from env
 ```
 
 ### `tracing` — internal LLM call logs (planned)

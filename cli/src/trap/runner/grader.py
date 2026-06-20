@@ -15,8 +15,8 @@ if TYPE_CHECKING:
 
 class GraderRunner:
     def __init__(self, runner: TaskRunner, case_results: tuple[CaseResult, ...]) -> None:
-        assert runner.traptask_obj.grader is not None
-        self.grader: SubprocessConfig = runner.traptask_obj.grader
+        assert runner.traptask_config.grader is not None
+        self.grader: SubprocessConfig = runner.traptask_config.grader
         self.runner = runner
         self.cases = case_results
         # Run-level grader gets its own `grader/` directory next to report.json.

@@ -17,14 +17,14 @@ class DirsConfig(BaseModel):
     expected: str = "expected/"
 
 
-class TrapTaskCase(BaseModel):
+class TraptaskCase(BaseModel):
     id: str
     description: str = ""
     tags: tuple[str, ...] = ()
     skip: bool = False
 
 
-class TrapTask(BaseModel):
+class TraptaskConfig(BaseModel):
     dirs: DirsConfig = DirsConfig()
     # Advisory declaration of what a solution produces: output filenames written
     # into the manifest's `outputs` dir, and/or the tokens `stdout` / `stderr` for
@@ -32,7 +32,7 @@ class TrapTask(BaseModel):
     # never enforces it; the judge is the sole arbiter (it scans `outputs` and reads
     # the `run` captures freely, so dynamic outputs stay supported). Omit if unused.
     declared_outputs: tuple[str, ...] = ()
-    cases: tuple[TrapTaskCase, ...]
+    cases: tuple[TraptaskCase, ...]
     judge: SubprocessConfig | None = None  # None → skip per-case scoring
     grader: SubprocessConfig | None = None  # None → skip overall aggregation
     # shell command (run via shell, cwd = traptask.yaml's directory) that prepares

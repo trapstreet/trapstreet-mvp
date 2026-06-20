@@ -1,8 +1,9 @@
+cmd: sh -c 'set -a && . .env && set +a && uv run solution.py'
+metadata:
+  provider: openai
+  models: [gpt-4o-mini, gpt-4o]
+
 tasks:
   test:
-    cmd: sh -c 'set -a && . .env && set +a && uv run solution.py'
     traptask:
       source: ../task
-    metadata:
-      provider: openai
-      models: [gpt-4o-mini, gpt-4o]

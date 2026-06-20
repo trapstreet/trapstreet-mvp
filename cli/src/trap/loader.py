@@ -7,8 +7,8 @@ from pathlib import Path
 
 import yaml
 
-from trap.models import Task, TrapTask, TrapTaskCase
-from trap.models.config import TrapConfig
+from trap.models import Task, TraptaskCase, TraptaskConfig
+from trap.models.trap_yaml import TrapConfig
 
 
 class TrapLoader:
@@ -17,9 +17,9 @@ class TrapLoader:
     def __init__(self, trap_yaml_path: Path) -> None:
         self.trap_dir: Path = trap_yaml_path.resolve().parent
         data = yaml.safe_load(trap_yaml_path.read_text())
-        config = TrapConfig.model_validate(data)
+        self.config: TrapConfig = TrapConfig.model_validate(data)
         self.tasks: dict[str, Task] = {
-            name: task.model_copy(update={"name": name}) for name, task in config.tasks.items()
+            name: task.model_copy(update={"name": name}) for name, task in self.config.tasks.items()
         }
 
     def select_task(self, name: str) -> Task:
@@ -67,31 +67,31 @@ class TrapLoader:
         return cls(cwd / solution / "trap.yaml")
 
 
-class TrapTaskLoader:
+class TraptaskLoader:
     """Loads traptask.yaml (task author's config) and resolves runtime paths."""
 
     def __init__(self, traptask_yaml_path: Path) -> None:
-        self.task_dir: Path = traptask_yaml_path.resolve().parent
+        self.traptask_dir: Path = traptask_yaml_path.resolve().parent
         if traptask_yaml_path.exists():
-            self.traptask = TrapTask.model_validate(yaml.safe_load(traptask_yaml_path.read_text()))
+            self.traptask = TraptaskConfig.model_validate(yaml.safe_load(traptask_yaml_path.read_text()))
         else:
-            self.traptask = self._discover(self.task_dir)
-        self.inputs_dir: Path = (self.task_dir / self.traptask.dirs.inputs).resolve()
-        self.expected_dir: Path = (self.task_dir / self.traptask.dirs.expected).resolve()
+            self.traptask = self._discover(self.traptask_dir)
+        self.inputs_dir: Path = (self.traptask_dir / self.traptask.dirs.inputs).resolve()
+        self.expected_dir: Path = (self.traptask_dir / self.traptask.dirs.expected).resolve()
 
     @staticmethod
-    def _discover(task_dir: Path) -> TrapTask:
-        """Auto-build TrapTask by scanning inputs/ when traptask.yaml is absent."""
-        inputs_dir = task_dir / "inputs"
+    def _discover(traptask_dir: Path) -> TraptaskConfig:
+        """Auto-build TraptaskConfig by scanning inputs/ when traptask.yaml is absent."""
+        inputs_dir = traptask_dir / "inputs"
         if not inputs_dir.is_dir():
-            raise FileNotFoundError(f"no traptask.yaml and no inputs/ directory found in {task_dir}")
+            raise FileNotFoundError(f"no traptask.yaml and no inputs/ directory found in {traptask_dir}")
         case_ids = sorted(p.name for p in inputs_dir.iterdir() if p.is_dir())
         if not case_ids:
-            raise FileNotFoundError(f"inputs/ in {task_dir} has no case subdirectories")
-        return TrapTask(cases=tuple(TrapTaskCase(id=case_id) for case_id in case_ids))
+            raise FileNotFoundError(f"inputs/ in {traptask_dir} has no case subdirectories")
+        return TraptaskConfig(cases=tuple(TraptaskCase(id=case_id) for case_id in case_ids))
 
     @classmethod
-    def from_task(cls, task: Task, trap_dir: Path, setup: bool = False) -> TrapTaskLoader:
+    def from_task(cls, task: Task, trap_dir: Path, setup: bool = False) -> TraptaskLoader:
         """Resolve traptask.yaml from a Task's traptask field and the trap.yaml directory.
 
         Mirrors `TrapLoader.from_solution`: `source` is a local path or a git+ URL.
@@ -121,15 +121,15 @@ class TrapTaskLoader:
         loader = cls(traptask_dir / "traptask.yaml")
         if (is_local_changed or setup) and loader.traptask.setup_cmd:
             # raises subprocess.CalledProcessError on non-zero exit
-            subprocess.run(loader.traptask.setup_cmd, shell=True, cwd=loader.task_dir, check=True)
+            subprocess.run(loader.traptask.setup_cmd, shell=True, cwd=loader.traptask_dir, check=True)
         return loader
 
     @property
-    def cases(self) -> tuple[TrapTaskCase, ...]:
+    def cases(self) -> tuple[TraptaskCase, ...]:
         """Return all non-skipped cases."""
         return tuple(c for c in self.traptask.cases if not c.skip)
 
-    def cases_with_tags(self, tags: Iterable[str] | None = None) -> tuple[TrapTaskCase, ...]:
+    def cases_with_tags(self, tags: Iterable[str] | None = None) -> tuple[TraptaskCase, ...]:
         """Return non-skipped cases matching any of the specified tags, or all cases if tags is empty/None."""
         if not (tag_set := set(tags or ())):
             return self.cases

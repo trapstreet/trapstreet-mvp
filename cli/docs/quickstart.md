@@ -55,12 +55,14 @@ print(data["message"])
 `examples/echo/solution/trap.yaml` tells trap how to run it:
 
 ```yaml
+cmd: uv run python echo.py
+stdin: input.json            # pipe inputs/{case_id}/input.json into stdin
+
 tasks:
   test:
     description: Echo solution — reads stdin JSON, writes it back to stdout
-    cmd: uv run python echo.py
-    traptask: ../task          # path to the task directory
-    stdin: input.json          # pipe inputs/{case_id}/input.json into stdin
+    traptask:
+      source: ../task          # path to the task directory
 ```
 
 ---

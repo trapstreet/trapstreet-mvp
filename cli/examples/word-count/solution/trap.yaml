@@ -1,21 +1,20 @@
+cmd: uv run python word_count.py
+stdin: text.txt
+# Self-reported "Solution metadata" — never validated by trapstreet,
+# shown on the run detail page so the leaderboard isn't a black box.
+# Edit these to describe your actual solution.
+metadata:
+  framework: stdlib-python
+  notes: reference solution, pure stdlib
+
 tasks:
   # Local task name = trapstreet task_id so `tp submit` Just Works
-  # without --as flag. Bench / variant tasks at the bottom keep their
-  # own local names since they don't map to a trapstreet task.
+  # without --as flag. Bench / variant tasks keep their own local names
+  # since they don't map to a trapstreet task.
   word-count:
-    cmd: uv run python word_count.py
     traptask:
       source: ../task
-    stdin: text.txt
-    # Self-reported "Solution metadata" — never validated by trapstreet,
-    # shown on the run detail page so the leaderboard isn't a black box.
-    # Edit these to describe your actual solution.
-    metadata:
-      framework: stdlib-python
-      notes: reference solution, pure stdlib
 
   run:
-    cmd: uv run python word_count.py
     traptask:
       source: ../task-run
-    stdin: text.txt

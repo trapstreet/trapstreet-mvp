@@ -1,19 +1,19 @@
+cmd: uv run python echo.py
+stdin: input.json
+# Self-reported "Solution metadata" — never validated by trapstreet,
+# shown on the run detail page so the leaderboard isn't a black box.
+metadata:
+  framework: stdlib-python
+  notes: reference solution
+
 tasks:
   # Local task name = trapstreet task_id so `tp submit` Just Works
   # without --as flag.
   echo:
     description: Echo solution — reads stdin JSON and writes it back to stdout
-    cmd: uv run python echo.py
     traptask:
       source: ../task
-    stdin: input.json
-    # See word-count's trap.yaml for what this is.
-    metadata:
-      framework: stdlib-python
-      notes: reference solution
 
   run:
-    cmd: uv run python echo.py
     traptask:
       source: ../task
-    stdin: input.json

@@ -15,7 +15,7 @@ from rich.progress import (
 )
 from rich.table import Column
 
-from trap.models import CaseResult, TrapTaskCase
+from trap.models import CaseResult, TraptaskCase
 
 
 class CaseProgress:
@@ -24,7 +24,7 @@ class CaseProgress:
     Pass ``console=None`` (the default) for a silent no-op.
     """
 
-    def __init__(self, cases: tuple[TrapTaskCase, ...], *, console: Console | None = None) -> None:
+    def __init__(self, cases: tuple[TraptaskCase, ...], *, console: Console | None = None) -> None:
         self._n = len(cases)
         self._console = console
         self._progress: Progress | None = None

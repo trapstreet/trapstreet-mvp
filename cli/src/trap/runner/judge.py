@@ -21,8 +21,8 @@ class JudgeRunner:
         self.case_expected_dir = runner.task_expected_dir / case_id  # task-repo side
         self.layout = layout  # workspace side
 
-        assert runner.traptask_obj.judge is not None
-        self.judge: SubprocessConfig = runner.traptask_obj.judge
+        assert runner.traptask_config.judge is not None
+        self.judge: SubprocessConfig = runner.traptask_config.judge
 
     @property
     def _manifest(self) -> str:

@@ -9,10 +9,12 @@ A solution is any program that can be invoked from a shell. It receives inputs v
 Create `trap.yaml` next to your solution code:
 
 ```yaml
+cmd: uv run python solution.py
+
 tasks:
   test:
-    cmd: uv run python solution.py
-    traptask: ../task          # path to the directory containing traptask.yaml
+    traptask:
+      source: ../task          # path to the directory containing traptask.yaml
 ```
 
 Run from the same directory as `trap.yaml`:
@@ -47,12 +49,13 @@ Path(outputs["result.json"]).write_text(json.dumps({"answer": 42}))
 stdin is always available if you declare it:
 
 ```yaml
+cmd: uv run python solution.py
+stdin: input.json            # pipe inputs/{case_id}/input.json into stdin
+
 tasks:
   test:
-    cmd: uv run python solution.py
-    traptask: ../task
-    inputs:
-      stdin: input.json        # pipe inputs/{case_id}/input.json into stdin
+    traptask:
+      source: ../task
 ```
 
 stdout and stderr are captured automatically — you never need to declare them.
@@ -98,13 +101,12 @@ client = Mistral(
 )
 ```
 
-To disable cost tracking for a task:
+To disable cost tracking:
 
 ```yaml
-tasks:
-  test:
-    cost:
-      enabled: false
+cmd: uv run python solution.py
+cost:
+  enabled: false
 ```
 
 → [Full cost tracking guide](cost-tracking.md)

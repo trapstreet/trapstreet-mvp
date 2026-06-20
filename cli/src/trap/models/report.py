@@ -10,8 +10,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
-from trap.models.config import Task
 from trap.models.results import CaseResult
+from trap.models.trap_yaml import Task, TrapConfig
 
 
 class Summary(BaseModel):
@@ -67,6 +67,7 @@ class ReportData(BaseModel):
     def from_run(
         cls,
         task: Task,
+        trap_config: TrapConfig,
         cases: tuple[CaseResult, ...],
         started_at: datetime,
         finished_at: datetime,
@@ -78,7 +79,7 @@ class ReportData(BaseModel):
         # User-set keys in trap.yaml's metadata: block always win.
         merged = {
             **(auto_metadata or {}),
-            **(dict(task.metadata) if task.metadata else {}),
+            **(dict(trap_config.metadata) if trap_config.metadata else {}),
         }
         return cls(
             task_id=task.name,
@@ -87,7 +88,7 @@ class ReportData(BaseModel):
             started_at=_iso(started_at),
             finished_at=_iso(finished_at),
             metadata=merged,
-            solution=task.solution,
+            solution=trap_config.name,
         )
 
 

@@ -13,7 +13,7 @@ from trap.auth import DEFAULT_SERVER, ApiClient, AuthStore
 from trap.cli._auth import auth_app
 from trap.display import CaseProgress, render_submit_result
 from trap.git_ops import GitOpsError, LocalRepo
-from trap.loader import TrapLoader, TrapTaskLoader
+from trap.loader import TrapLoader, TraptaskLoader
 from trap.report import OutputFormat, ReportHandle, renderer_factory
 from trap.runner import TaskRunner
 
@@ -66,11 +66,11 @@ def run(
             ),
         )
         task_obj = trap_yaml_loader.resolve_task(task)
-        task_yaml_loader = TrapTaskLoader.from_task(task_obj, trap_yaml_loader.trap_dir, setup=setup)
+        traptask_yaml_loader = TraptaskLoader.from_task(task_obj, trap_yaml_loader.trap_dir, setup=setup)
     except (GitOpsError, subprocess.CalledProcessError) as e:
         raise _die(e) from None
 
-    active_cases = task_yaml_loader.cases_with_tags(tags or [])
+    active_cases = traptask_yaml_loader.cases_with_tags(tags or [])
 
     started_at = datetime.now()
     ts = started_at.isoformat(timespec="seconds")
@@ -78,9 +78,10 @@ def run(
 
     runner = TaskRunner(
         task_obj=task_obj,
+        trap_config=trap_yaml_loader.config,
         trap_dir=trap_yaml_loader.trap_dir,
-        traptask_obj=task_yaml_loader.traptask,
-        traptask_dir=task_yaml_loader.task_dir,
+        traptask_config=traptask_yaml_loader.traptask,
+        traptask_dir=traptask_yaml_loader.traptask_dir,
         run_dir=report_handle.run_dir,
     )
     prog_console = console if output == OutputFormat.rich else None
@@ -101,6 +102,7 @@ def run(
     report_data = report_handle.save(
         cases=case_results,
         task=task_obj,
+        trap_config=trap_yaml_loader.config,
         started_at=started_at,
         finished_at=finished_at,
         grader_metrics=grader_metrics,

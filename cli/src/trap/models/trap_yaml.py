@@ -20,17 +20,22 @@ class TaskSource(BaseModel):
     clone_to: Path | None = None
 
 
-class TrapConfig(BaseModel):
-    tasks: dict[str, Task]
-
-
 class Task(BaseModel):
+    # A task binding: which task this solution is run against, plus the knobs
+    # that legitimately vary per task. Solution-invariant settings sit at the
+    # top level of trap.yaml (see TrapConfig).
     name: str = ""
     description: str = ""
-    cmd: str  # run via shlex.split, cwd = the trap.yaml directory
     traptask: TaskSource = TaskSource()  # local path or git+ URL (+ optional clone_to)
-    stdin: str | None = None  # optional: filename in inputs/{case_id}/ piped to the solution's stdin
     timeout: int = 30
+
+
+class TrapConfig(BaseModel):
+    # trap.yaml is one solution's file: its invariant settings sit at the top
+    # level (flat, 1:1 with the YAML), and `tasks` is the collection of task
+    # bindings it is run against.
+    cmd: str  # run via shlex.split, cwd = the trap.yaml directory
+    stdin: str | None = None  # optional: filename in inputs/{case_id}/ piped to the solution's stdin
     # env var holding the run manifest (inputs_dir / outputs_dir → directory paths),
     # injected by the runner; override if the solution needs another name
     manifest_envvar: str = "TRAP_MANIFEST"
@@ -46,8 +51,9 @@ class Task(BaseModel):
     # "gpt-5-baseline"). When omitted, the server auto-assigns a
     # serialised name like `<user-slug>-<n>`, so each submit lands as
     # its own row on the leaderboard.
-    solution: str | None = None
+    name: str | None = None
     cost: CostConfig | None = None  # None = auto-detect from env; set enabled: false to disable
+    tasks: dict[str, Task]
 
     @property
     def cost_enabled(self) -> bool:

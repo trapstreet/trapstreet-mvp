@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from .config import CostConfig, Task, TaskSource, TrapConfig
 from .cost import CaseCost, ModelCost
 from .report import ReportData, Summary
 from .results import CaseResult
-from .task import DirsConfig, SubprocessConfig, TrapTask, TrapTaskCase
+from .trap_yaml import CostConfig, Task, TaskSource, TrapConfig
+from .traptask_yaml import DirsConfig, SubprocessConfig, TraptaskCase, TraptaskConfig
 
 __all__ = [
     "CaseCost",
@@ -18,6 +18,6 @@ __all__ = [
     "Task",
     "TaskSource",
     "TrapConfig",
-    "TrapTask",
-    "TrapTaskCase",
+    "TraptaskCase",
+    "TraptaskConfig",
 ]

@@ -25,7 +25,7 @@ class CaseRunner:
 
     @property
     def _stdin(self) -> str:
-        stdin = self.runner.task.stdin
+        stdin = self.runner.trap_config.stdin
         if stdin:
             return (self.case_inputs_dir / stdin).read_text()
         return ""
@@ -43,10 +43,11 @@ class CaseRunner:
         self.layout.outputs_dir.mkdir(parents=True, exist_ok=True)
 
         task = self.runner.task
+        trap_config = self.runner.trap_config
 
         proxy: CostProxy | None = None
         proxy_env: dict[str, str] = {}
-        if task.cost_enabled:
+        if trap_config.cost_enabled:
             try:
                 proxy = CostProxy()
                 proxy.start()
@@ -58,7 +59,7 @@ class CaseRunner:
         t0 = time.monotonic()
         try:
             proc = subprocess.run(
-                shlex.split(task.cmd),
+                shlex.split(trap_config.cmd),
                 input=self._stdin,
                 capture_output=True,
                 text=True,
@@ -66,7 +67,7 @@ class CaseRunner:
                 timeout=task.timeout,
                 env={
                     **os.environ,
-                    task.manifest_envvar: self._manifest,
+                    trap_config.manifest_envvar: self._manifest,
                     **proxy_env,
                 },
             )

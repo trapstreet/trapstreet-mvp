@@ -138,12 +138,14 @@ The terminal table shows per-case aggregates. Per-model breakdown is in `report.
 Add to `trap.yaml`:
 
 ```yaml
+cmd: uv run python solution.py
+cost:
+  enabled: false
+
 tasks:
   test:
-    cmd: uv run python solution.py
-    traptask: ../task
-    cost:
-      enabled: false
+    traptask:
+      source: ../task
 ```
 
 Omitting the `cost` key means auto-detect from env vars (the default).

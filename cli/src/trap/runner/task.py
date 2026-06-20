@@ -5,7 +5,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from trap.models import CaseResult, Task, TrapTask, TrapTaskCase
+from trap.models import CaseResult, Task, TrapConfig, TraptaskCase, TraptaskConfig
 from trap.runner.case import CaseRunner
 from trap.runner.grader import GraderRunner
 from trap.runner.judge import JudgeRunner
@@ -16,19 +16,21 @@ class TaskRunner:
     def __init__(
         self,
         task_obj: Task,
+        trap_config: TrapConfig,
         trap_dir: Path,
         traptask_dir: Path,
-        traptask_obj: TrapTask,
+        traptask_config: TraptaskConfig,
         run_dir: Path,
     ) -> None:
         self.task = task_obj
+        self.trap_config = trap_config
         self.trap_dir = trap_dir
-        self.traptask_obj = traptask_obj
+        self.traptask_config = traptask_config
         self.traptask_dir = traptask_dir
         self.run_dir = run_dir
 
-        self.task_inputs_dir = (traptask_dir / traptask_obj.dirs.inputs).resolve()
-        self.task_expected_dir = (traptask_dir / traptask_obj.dirs.expected).resolve()
+        self.task_inputs_dir = (traptask_dir / traptask_config.dirs.inputs).resolve()
+        self.task_expected_dir = (traptask_dir / traptask_config.dirs.expected).resolve()
 
     def _update_latest(self) -> None:
         latest = self.run_dir.parent / "latest"
@@ -44,7 +46,7 @@ class TaskRunner:
 
     def _iter(
         self,
-        cases: Iterable[TrapTaskCase],
+        cases: Iterable[TraptaskCase],
         *,
         fail_fast: bool = False,
         on_case_start: Callable[[str], None] | None = None,
@@ -56,7 +58,7 @@ class TaskRunner:
                 on_case_start(case.id)
             layout = CaseLayout.for_case(self.run_dir, case.id)
             result = CaseRunner(self, case.id, layout).run()
-            if self.traptask_obj.judge is not None:
+            if self.traptask_config.judge is not None:
                 metrics = JudgeRunner(self, case.id, layout).run()
                 result = result.model_copy(update={"metrics": metrics})
             if on_case_done is not None:
@@ -67,7 +69,7 @@ class TaskRunner:
 
     def run(
         self,
-        cases: Iterable[TrapTaskCase],
+        cases: Iterable[TraptaskCase],
         *,
         fail_fast: bool = False,
         on_case_start: Callable[[str], None] | None = None,
@@ -79,7 +81,7 @@ class TaskRunner:
         )
 
         grader_metrics = None
-        if self.traptask_obj.grader is not None:
+        if self.traptask_config.grader is not None:
             grader_metrics = GraderRunner(self, case_results).run()
 
         self._update_latest()

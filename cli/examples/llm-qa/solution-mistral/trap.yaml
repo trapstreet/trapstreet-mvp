@@ -1,8 +1,9 @@
+cmd: sh -c 'set -a && . .env && set +a && uv run solution.py'
+metadata:
+  provider: mistral
+  model: mistral-small-latest
+
 tasks:
   test:
-    cmd: sh -c 'set -a && . .env && set +a && uv run solution.py'
     traptask:
       source: ../task
-    metadata:
-      provider: mistral
-      model: mistral-small-latest
