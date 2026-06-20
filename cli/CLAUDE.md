@@ -36,7 +36,7 @@ field in trap.yaml — a single input filename). stdout/stderr/exit_code are alw
 captured automatically (see the `run` block below).
 
 **trap.yaml format** — a trap.yaml *is* one solution's file: its invariant
-settings (`cmd`, `stdin`, `manifest_envvar`, `metadata`, `name`, `cost`) sit at
+settings (`cmd`, `stdin`, `manifest_envvar`, `name`, `profile`, `extra`, `cost`) sit at
 the top level, with `tasks:` as the one nested collection of task bindings it is
 run against. Only per-task knobs (`traptask`, `description`, `timeout`) live under
 each task entry:
@@ -45,8 +45,11 @@ cmd: uv run python solution.py
 stdin: input.txt               # optional: pipe this input file to the solution's stdin
 manifest_envvar: TRAP_MANIFEST   # override the env var name if the solution needs another
 name: claude-sonnet-baseline   # optional leaderboard identity (else server auto-assigns)
-metadata:                      # optional self-reported profile (model/framework/...)
+profile:                       # optional self-reported engine identity → report.json
+  model: claude-sonnet-4       # model/framework only; each takes a scalar or a list
   framework: stdlib-python
+extra:                         # optional free-form author notes; never written to the report
+  notes: anything
 # cost: {enabled: false}       # optional; omit to auto-detect from env
 
 tasks:                         # task bindings, keyed by name; `traptask` defaults to ../task

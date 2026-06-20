@@ -1,9 +1,12 @@
 cmd: uv run python echo.py
 stdin: input.json
-# Self-reported "Solution metadata" — never validated by trapstreet,
-# shown on the run detail page so the leaderboard isn't a black box.
-metadata:
+# Self-reported engine identity — strict (model/framework only), surfaced on the
+# run detail page so the leaderboard isn't a black box. Each field takes a scalar
+# or a list.
+profile:
   framework: stdlib-python
+# Free-form author notes: tolerated but never written to the report.
+extra:
   notes: reference solution
 
 tasks:

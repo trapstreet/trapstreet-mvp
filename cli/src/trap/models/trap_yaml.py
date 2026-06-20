@@ -4,7 +4,24 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
+
+
+class Profile(BaseModel):
+    # Self-reported engine identity, surfaced in the report. Both fields are
+    # multi-valued (a run may use several models/frameworks); a scalar is
+    # accepted as a convenience and normalised to a single-element list.
+    model: tuple[str, ...] = ()
+    framework: tuple[str, ...] = ()
+
+    @field_validator("model", "framework", mode="before")
+    @classmethod
+    def _as_list(cls, v: Any) -> Any:
+        if v is None:
+            return ()
+        if isinstance(v, str):
+            return (v,)
+        return v
 
 
 class CostConfig(BaseModel):
@@ -41,8 +58,10 @@ class TrapConfig(BaseModel):
     manifest_envvar: str = "TRAP_MANIFEST"
     # optional leaderboard identity; None → server auto-assigns a serial name
     name: str | None = None
-    # free-form self-reported profile (model/framework/...); plumbed to report.json `metadata`
-    metadata: dict[str, Any] = {}
+    # self-reported engine identity (model/framework); plumbed to report.json `profile`
+    profile: Profile = Field(default_factory=Profile)
+    # free-form escape hatch for author notes; tolerated but never written to the report
+    extra: dict[str, Any] = {}
     cost: CostConfig | None = None  # None = auto-detect from env; set enabled: false to disable
     tasks: dict[str, Task]
 

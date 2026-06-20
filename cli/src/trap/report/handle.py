@@ -31,7 +31,7 @@ class ReportHandle:
         started_at_utc: datetime,
         finished_at_utc: datetime,
         grader_metrics: Any = None,
-        auto_metadata: dict[str, Any] | None = None,
+        provenance: dict[str, Any] | None = None,
     ) -> ReportData:
         data = ReportData.from_run(
             task=task,
@@ -40,7 +40,7 @@ class ReportHandle:
             started_at_utc=started_at_utc,
             finished_at_utc=finished_at_utc,
             grader_metrics=grader_metrics,
-            auto_metadata=auto_metadata,
+            provenance=provenance,
         )
         self.report_json_path.write_text(data.model_dump_json(indent=2))
         return data

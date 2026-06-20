@@ -45,9 +45,26 @@ Optional filename. trap pipes `inputs/{case_id}/{filename}` into the solution's 
 
 Name of the env var carrying the run manifest. Default: `TRAP_MANIFEST`. Override if the solution already uses this name for something else.
 
-### `metadata`
+### `profile`
 
-Free-form dict attached to the run report. Use it to record solution configuration (model name, framework version, etc.). Never validated by trap.
+Self-reported engine identity, written to the run report. **Strict** — only two fields:
+
+- `model` — the model(s) the run used.
+- `framework` — what drove the model (e.g. `claude-code`, `langchain`, `stdlib-python`).
+
+Each accepts a scalar or a list (a run may use several), and is normalised to a list in the report:
+
+```yaml
+profile:
+  model: claude-sonnet-4          # → ["claude-sonnet-4"]
+  framework: [claude-code, mcp]   # → ["claude-code", "mcp"]
+```
+
+Self-reported today; auto-detection is planned.
+
+### `extra`
+
+Free-form dict for author notes. Tolerated but **never written to the report** — an escape hatch for arbitrary keys that should stay out of the strict `profile`.
 
 ### `name`
 

@@ -1,10 +1,11 @@
 cmd: uv run python word_count.py
 stdin: text.txt
-# Self-reported "Solution metadata" — never validated by trapstreet,
-# shown on the run detail page so the leaderboard isn't a black box.
-# Edit these to describe your actual solution.
-metadata:
+# Self-reported engine identity — strict (model/framework only), surfaced on the
+# run detail page so the leaderboard isn't a black box. Edit to describe your run.
+profile:
   framework: stdlib-python
+# Free-form author notes: tolerated but never written to the report.
+extra:
   notes: reference solution, pure stdlib
 
 tasks:

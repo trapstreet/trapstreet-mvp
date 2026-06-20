@@ -95,9 +95,8 @@ def run(
     finished_at_utc = datetime.now(UTC)
 
     # Record git provenance (repo + commit) of the solution checkout so the
-    # report is reproducible. Only set for a clean git checkout with a remote;
-    # the trap.yaml metadata: block overrides any auto-detected key.
-    auto_metadata = LocalRepo.provenance_of(trap_yaml_loader.trap_dir)
+    # report is reproducible. Only set for a clean git checkout with a remote.
+    provenance = LocalRepo.provenance_of(trap_yaml_loader.trap_dir)
 
     report_data = report_handle.save(
         cases=case_results,
@@ -106,7 +105,7 @@ def run(
         started_at_utc=started_at_local.astimezone(UTC),
         finished_at_utc=finished_at_utc,
         grader_metrics=grader_metrics,
-        auto_metadata=auto_metadata,
+        provenance=provenance,
     )
     renderer_factory(output).render(report_data)
 

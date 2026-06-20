@@ -1,7 +1,6 @@
 cmd: uv run solution.py
-metadata:
-  provider: anthropic
-  tool: claude-code
+profile:
+  framework: claude-code
 
 tasks:
   test:

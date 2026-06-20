@@ -41,14 +41,6 @@ class RichRenderer(BaseRenderer):
         return escape(str(value))
 
     @staticmethod
-    def _render_summary_value(key: str, value: object) -> str:
-        if key == "cost_usd_total" and isinstance(value, float):
-            return f"${value:.4f}"
-        if key == "tokens_total" and isinstance(value, int):
-            return f"{value:,}"
-        return RichRenderer._render_metric_cell(value)
-
-    @staticmethod
     def _render_status(result: CaseResult) -> tuple[str, str]:
         match result:
             case CaseResult(skipped=True):
@@ -96,11 +88,12 @@ class RichRenderer(BaseRenderer):
         return table
 
     def _build_summary(self, data: ReportData) -> Panel:
-        s = data.summary
-        n_passed = s.n_passed or 0
-        n_total = s.n_total or 0
-        n_skipped = s.n_skipped or 0
-        n_failed = max(0, n_total - n_passed - n_skipped)
+        # Pass/fail/skip counts derived directly from the cases, using the same
+        # criteria as _render_status (skipped → SKIP, exit_code 0 → PASS, else FAIL).
+        results = data.cases_results
+        n_skipped = sum(1 for r in results if r.skipped)
+        n_passed = sum(1 for r in results if not r.skipped and r.exit_code == 0)
+        n_failed = len(results) - n_passed - n_skipped
         stats = []
         if n_passed:
             stats.append(f"[bold green]{n_passed} passed[/bold green]")
@@ -111,17 +104,8 @@ class RichRenderer(BaseRenderer):
 
         rows: list[tuple[str, Text | str]] = [
             ("task", Text(data.task_name, style="bold")),
-            ("result", Text.from_markup(" · ".join(stats))),
+            ("result", Text.from_markup(" · ".join(stats) or "[dim]no cases[/dim]")),
         ]
-        # Render summary as a compact key/value strip — score, passed, plus
-        # any well-known or extra grader-emitted keys.
-        summary_dump = s.model_dump(exclude_none=True)
-        # Drop counts (already shown in `result` row) to keep this terse.
-        for k in ("n_passed", "n_total", "n_skipped"):
-            summary_dump.pop(k, None)
-        if summary_dump:
-            parts = [self._render_summary_value(k, v) + f" {escape(k)}" for k, v in summary_dump.items()]
-            rows.append(("summary", Text.from_markup("  ".join(parts))))
 
         grid = Table.grid(padding=(0, 2))
         grid.add_column(style="dim", justify="right")
