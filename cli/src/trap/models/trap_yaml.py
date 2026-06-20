@@ -34,24 +34,15 @@ class TrapConfig(BaseModel):
     # trap.yaml is one solution's file: its invariant settings sit at the top
     # level (flat, 1:1 with the YAML), and `tasks` is the collection of task
     # bindings it is run against.
+    # Field order mirrors the canonical trap.yaml layout.
     cmd: str  # run via shlex.split, cwd = the trap.yaml directory
     stdin: str | None = None  # optional: filename in inputs/{case_id}/ piped to the solution's stdin
-    # env var holding the run manifest (inputs_dir / outputs_dir → directory paths),
-    # injected by the runner; override if the solution needs another name
+    # env var carrying the run manifest (inputs_dir / outputs_dir); override if needed
     manifest_envvar: str = "TRAP_MANIFEST"
-    # self-reported solution profile — e.g. {model, framework, max_tokens}.
-    # Free-form; never validated by trap or trapstreet. Plumbed through to
-    # report.json's `metadata` field for the leaderboard's "Solution metadata"
-    # panel. See trapstreet/docs/scoring-and-metrics.md.
-    metadata: dict[str, Any] = {}
-    # Optional leaderboard identity. When set, `tp submit` will create
-    # this solution on first upload (or reuse it on subsequent uploads)
-    # under the authenticated user — letting one human run multiple
-    # named agents in parallel (e.g. "claude-sonnet-baseline" vs
-    # "gpt-5-baseline"). When omitted, the server auto-assigns a
-    # serialised name like `<user-slug>-<n>`, so each submit lands as
-    # its own row on the leaderboard.
+    # optional leaderboard identity; None → server auto-assigns a serial name
     name: str | None = None
+    # free-form self-reported profile (model/framework/...); plumbed to report.json `metadata`
+    metadata: dict[str, Any] = {}
     cost: CostConfig | None = None  # None = auto-detect from env; set enabled: false to disable
     tasks: dict[str, Task]
 

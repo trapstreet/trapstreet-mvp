@@ -7,6 +7,15 @@
 # no grader, no expected/).
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Setup — prepares the task checkout (the first thing that happens to it).
+# Task-author owned, so it travels with the task version and every solution
+# gets an identical environment.
+# ─────────────────────────────────────────────────────────────────────────────
+setup_cmd: uv sync                # [optional] default: null. Shell command run in this
+                                  #   dir. Auto-runs after a fresh clone / branch update of
+                                  #   a REMOTE task; otherwise force it with `tp run --setup`.
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Where the fixtures live (paths relative to this traptask.yaml).
 # ─────────────────────────────────────────────────────────────────────────────
 dirs:                             # [optional] the whole block defaults as below.
@@ -50,14 +59,6 @@ judge:                            # [optional] default: null → cases run but u
 grader:                           # [optional] default: null → no aggregation step.
   cmd: uv run python grader.py    # [required-in-block] run via shlex.split, cwd = this dir.
   manifest_envvar: TRAPTASK_MANIFEST  # [optional] default: TRAPTASK_MANIFEST.
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Setup — prepares the task checkout. Task-author owned, so it travels with the
-# task version and every solution gets an identical environment.
-# ─────────────────────────────────────────────────────────────────────────────
-setup_cmd: uv sync                # [optional] default: null. Shell command run in this
-                                  #   dir. Auto-runs after a fresh clone / branch update of
-                                  #   a REMOTE task; otherwise force it with `tp run --setup`.
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Minimal equivalent (everything optional removed): just the cases, output-only.
