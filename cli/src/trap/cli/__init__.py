@@ -14,6 +14,7 @@ from trap.cli._auth import auth_app
 from trap.display import CaseProgress, render_submit_result
 from trap.git_ops import GitOpsError, LocalRepo
 from trap.loader import TrapLoader, TraptaskLoader
+from trap.models import Provenance
 from trap.report import OutputFormat, ReportHandle, renderer_factory
 from trap.runner import TaskRunner
 
@@ -94,13 +95,15 @@ def run(
         )
     finished_at_utc = datetime.now(UTC)
 
-    # Record git provenance (repo + commit) of the solution checkout so the
-    # report is reproducible. Only set for a clean git checkout with a remote.
-    provenance = LocalRepo.provenance_of(trap_yaml_loader.trap_dir)
+    # Record git provenance (repo + commit) of both checkouts — solution and task —
+    # so the run is reproducible. Each side is empty for a dirty/remote-less/local tree.
+    provenance = Provenance(
+        solution=LocalRepo.provenance_of(trap_yaml_loader.trap_dir),
+        task=LocalRepo.provenance_of(traptask_yaml_loader.traptask_dir),
+    )
 
     report_data = report_handle.save(
         cases=case_results,
-        task=task_obj,
         trap_config=trap_yaml_loader.config,
         started_at_utc=started_at_local.astimezone(UTC),
         finished_at_utc=finished_at_utc,

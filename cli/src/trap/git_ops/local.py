@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
 
 import git
 
 from trap.git_ops.url import ParsedGitUrl
+from trap.models.provenance import GitProvenance
 
 
 class LocalRepo:
@@ -36,8 +36,8 @@ class LocalRepo:
         except AttributeError:
             return None
 
-    def provenance(self) -> dict[str, Any]:
-        """{repo, commit} for a clean checkout with an origin, else {}.
+    def provenance(self) -> GitProvenance:
+        """{repo, commit} for a clean checkout with an origin, else empty.
 
         Empty for a dirty tree (tracked-file changes) or a remote-less repo — the
         run isn't reproducible from remote+commit alone, so we claim nothing.
@@ -45,11 +45,11 @@ class LocalRepo:
         """
         url = self.origin_normalised_url
         if url is None or not self.repo.head.is_valid() or self.repo.is_dirty():
-            return {}
-        return {"repo": url, "commit": self.repo.head.commit.hexsha}
+            return GitProvenance()
+        return GitProvenance(repo=url, commit=self.repo.head.commit.hexsha)
 
     @classmethod
-    def provenance_of(cls, path: Path) -> dict[str, Any]:
-        """Provenance ({repo, commit}) of the checkout at `path`, {} if not a git repo."""
+    def provenance_of(cls, path: Path) -> GitProvenance:
+        """Provenance ({repo, commit}) of the checkout at `path`, empty if not a git repo."""
         local_repo = cls.open(path, search_parent=True)
-        return local_repo.provenance() if local_repo else {}
+        return local_repo.provenance() if local_repo else GitProvenance()

@@ -103,7 +103,6 @@ class RichRenderer(BaseRenderer):
             stats.append(f"[dim]{n_skipped} skipped[/dim]")
 
         rows: list[tuple[str, Text | str]] = [
-            ("task", Text(data.task_name, style="bold")),
             ("result", Text.from_markup(" · ".join(stats) or "[dim]no cases[/dim]")),
         ]
 

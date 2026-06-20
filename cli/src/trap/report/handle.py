@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from trap.models import CaseResult, ReportData, Task, TrapConfig
+from trap.models import CaseResult, Provenance, ReportData, TrapConfig
 
 _REPORT_FILENAME = "report.json"
 
@@ -26,15 +26,13 @@ class ReportHandle:
     def save(
         self,
         cases: tuple[CaseResult, ...],
-        task: Task,
         trap_config: TrapConfig,
         started_at_utc: datetime,
         finished_at_utc: datetime,
         grader_metrics: Any = None,
-        provenance: dict[str, Any] | None = None,
+        provenance: Provenance | None = None,
     ) -> ReportData:
         data = ReportData.from_run(
-            task=task,
             trap_config=trap_config,
             cases_results=cases,
             started_at_utc=started_at_utc,
