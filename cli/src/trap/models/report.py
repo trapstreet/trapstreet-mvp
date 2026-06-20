@@ -18,10 +18,10 @@ class ReportData(BaseModel):
     """Top-level upload protocol envelope."""
 
     cases_results: tuple[CaseResult, ...]
-    started_at: str
-    finished_at: str
     # Raw run-level grader output; None when no grader is configured.
     grader_metrics: Any
+    started_at_utc: str
+    finished_at_utc: str
     # Engine identity (model/framework). Self-reported from trap.yaml today, but the
     # website consumes it from the report — never from trap.yaml directly — precisely
     # because the source may change: a future version is expected to derive this by
@@ -36,15 +36,15 @@ class ReportData(BaseModel):
         cls,
         trap_config: TrapConfig,
         cases_results: tuple[CaseResult, ...],
+        grader_metrics: Any,
         started_at_utc: datetime,
         finished_at_utc: datetime,
-        grader_metrics: Any,
         provenance: Provenance | None = None,
     ) -> ReportData:
         return cls(
             cases_results=cases_results,
-            started_at=started_at_utc.isoformat(timespec="seconds"),
-            finished_at=finished_at_utc.isoformat(timespec="seconds"),
+            started_at_utc=started_at_utc.isoformat(timespec="seconds"),
+            finished_at_utc=finished_at_utc.isoformat(timespec="seconds"),
             grader_metrics=grader_metrics,
             profile=trap_config.profile,
             provenance=provenance or Provenance(),
