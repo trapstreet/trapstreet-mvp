@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import subprocess
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated
 
@@ -72,8 +72,8 @@ def run(
 
     active_cases = traptask_yaml_loader.cases_with_tags(tags or [])
 
-    started_at = datetime.now()
-    ts = started_at.isoformat(timespec="seconds")
+    started_at_local = datetime.now()
+    ts = started_at_local.isoformat(timespec="seconds")
     report_handle = ReportHandle(workspace.resolve(), task_obj.name, ts)
 
     runner = TaskRunner(
@@ -92,7 +92,7 @@ def run(
             on_case_start=prog.on_case_start,
             on_case_done=prog.on_case_done,
         )
-    finished_at = datetime.now()
+    finished_at_utc = datetime.now(UTC)
 
     # Record git provenance (repo + commit) of the solution checkout so the
     # report is reproducible. Only set for a clean git checkout with a remote;
@@ -103,8 +103,8 @@ def run(
         cases=case_results,
         task=task_obj,
         trap_config=trap_yaml_loader.config,
-        started_at=started_at,
-        finished_at=finished_at,
+        started_at_utc=started_at_local.astimezone(UTC),
+        finished_at_utc=finished_at_utc,
         grader_metrics=grader_metrics,
         auto_metadata=auto_metadata,
     )

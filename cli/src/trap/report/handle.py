@@ -28,17 +28,17 @@ class ReportHandle:
         cases: tuple[CaseResult, ...],
         task: Task,
         trap_config: TrapConfig,
-        started_at: datetime,
-        finished_at: datetime,
+        started_at_utc: datetime,
+        finished_at_utc: datetime,
         grader_metrics: Any = None,
         auto_metadata: dict[str, Any] | None = None,
     ) -> ReportData:
         data = ReportData.from_run(
             task=task,
             trap_config=trap_config,
-            cases=cases,
-            started_at=started_at,
-            finished_at=finished_at,
+            cases_results=cases,
+            started_at_utc=started_at_utc,
+            finished_at_utc=finished_at_utc,
             grader_metrics=grader_metrics,
             auto_metadata=auto_metadata,
         )

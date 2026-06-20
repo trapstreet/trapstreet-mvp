@@ -17,7 +17,7 @@ class RichRenderer(BaseRenderer):
 
     @staticmethod
     def _get_metrics_keys(data: ReportData) -> set[str]:
-        return {key for result in data.cases if result.metrics for key in result.metrics}
+        return {key for result in data.cases_results if result.metrics for key in result.metrics}
 
     @staticmethod
     def _render_metric_cell(value: object) -> str:
@@ -68,7 +68,7 @@ class RichRenderer(BaseRenderer):
 
     def _build_table(self, data: ReportData) -> Table:
         metrics_keys = self._get_metrics_keys(data)
-        has_cost = any(c.cost is not None for c in data.cases)
+        has_cost = any(c.cost is not None for c in data.cases_results)
         table = Table(box=box.ROUNDED, show_header=True, header_style="bold", expand=True)
         table.add_column("case")
         table.add_column("status", justify="center")
@@ -79,7 +79,7 @@ class RichRenderer(BaseRenderer):
             table.add_column("prompt_tok", justify="right", style="dim")
             table.add_column("compl_tok", justify="right", style="dim")
             table.add_column("cost", justify="right")
-        for result in data.cases:
+        for result in data.cases_results:
             label, style = self._render_status(result)
             row = [escape(result.case_id), f"[{style}]{label}[/{style}]", f"{result.duration:.3f}s"]
             for key in metrics_keys:
@@ -110,7 +110,7 @@ class RichRenderer(BaseRenderer):
             stats.append(f"[dim]{n_skipped} skipped[/dim]")
 
         rows: list[tuple[str, Text | str]] = [
-            ("task", Text(data.task_id, style="bold")),
+            ("task", Text(data.task_name, style="bold")),
             ("result", Text.from_markup(" · ".join(stats))),
         ]
         # Render summary as a compact key/value strip — score, passed, plus
