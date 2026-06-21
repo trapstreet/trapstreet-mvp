@@ -47,11 +47,11 @@ class ReportData(BaseModel):
         grader_metrics: Any,
         started_at_utc: datetime,
         finished_at_utc: datetime,
-        provenance: Provenance | None = None,
+        provenance: Provenance,
         environment: Environment | None = None,
     ) -> ReportData:
         return cls(
-            provenance=provenance or Provenance(),
+            provenance=provenance,
             cases_results=cases_results,
             grader_metrics=grader_metrics,
             started_at_utc=started_at_utc.isoformat(timespec="seconds"),

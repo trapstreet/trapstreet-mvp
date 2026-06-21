@@ -29,8 +29,8 @@ class ReportHandle:
         case_results: tuple[CaseResult, ...],
         started_at_utc: datetime,
         finished_at_utc: datetime,
+        provenance: Provenance,
         grader_metrics: Any = None,
-        provenance: Provenance | None = None,
         environment: Environment | None = None,
     ) -> ReportData:
         data = ReportData.from_run(

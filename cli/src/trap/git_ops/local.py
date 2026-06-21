@@ -39,14 +39,19 @@ class LocalRepo:
     def provenance(self) -> GitProvenance:
         """{repo, commit} for a clean checkout with an origin, else empty.
 
-        Empty for a dirty tree (tracked-file changes) or a remote-less repo — the
-        run isn't reproducible from remote+commit alone, so we claim nothing.
-        Untracked files (run outputs under .trap/, .venv, …) don't count as dirty.
+        Empty for a dirty tree (tracked-file changes), a remote-less repo, or any
+        git error — the run isn't reproducible from remote+commit alone, so we
+        claim nothing. Best-effort: a probe failure degrades to empty rather than
+        aborting an otherwise-complete run. Untracked files (run outputs under
+        .trap/, .venv, …) don't count as dirty.
         """
-        url = self.origin_normalised_url
-        if url is None or not self.repo.head.is_valid() or self.repo.is_dirty():
+        try:
+            url = self.origin_normalised_url
+            if url is None or not self.repo.head.is_valid() or self.repo.is_dirty():
+                return GitProvenance()
+            return GitProvenance(repo=url, commit=self.repo.head.commit.hexsha)
+        except Exception:
             return GitProvenance()
-        return GitProvenance(repo=url, commit=self.repo.head.commit.hexsha)
 
     @classmethod
     def provenance_of(cls, path: Path) -> GitProvenance:
