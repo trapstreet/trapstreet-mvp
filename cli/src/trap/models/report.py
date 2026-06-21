@@ -9,6 +9,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from trap.models.environment import Environment
 from trap.models.provenance import Provenance
 from trap.models.results import CaseResult
 from trap.models.trap_yaml import Profile, TrapConfig
@@ -30,6 +31,8 @@ class ReportData(BaseModel):
     profile: Profile = Field(default_factory=Profile)
     # The (repo, commit) of both checkouts — the minimal seed to reproduce the run.
     provenance: Provenance = Field(default_factory=Provenance)
+    # Host machine environment captured at run time; None when --no-environment.
+    environment: Environment | None = None
 
     @classmethod
     def from_run(
@@ -40,6 +43,7 @@ class ReportData(BaseModel):
         started_at_utc: datetime,
         finished_at_utc: datetime,
         provenance: Provenance | None = None,
+        environment: Environment | None = None,
     ) -> ReportData:
         return cls(
             cases_results=cases_results,
@@ -48,4 +52,5 @@ class ReportData(BaseModel):
             grader_metrics=grader_metrics,
             profile=trap_config.profile,
             provenance=provenance or Provenance(),
+            environment=environment,
         )

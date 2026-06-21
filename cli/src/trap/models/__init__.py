@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from .cost import CaseCost, ModelCost
+from .environment import Cpu, Environment
 from .provenance import GitProvenance, Provenance
 from .report import ReportData
 from .results import CaseResult
@@ -11,7 +12,9 @@ __all__ = [
     "CaseCost",
     "CaseResult",
     "CostConfig",
+    "Cpu",
     "DirsConfig",
+    "Environment",
     "GitProvenance",
     "ModelCost",
     "Profile",

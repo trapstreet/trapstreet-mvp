@@ -12,6 +12,7 @@ from rich.console import Console
 from trap.auth import DEFAULT_SERVER, ApiClient, AuthStore
 from trap.cli._auth import auth_app
 from trap.display import CaseProgress, render_submit_result
+from trap.environment import EnvironmentDetector
 from trap.git_ops import GitOpsError, LocalRepo
 from trap.loader import TrapLoader, TraptaskLoader
 from trap.models import Provenance
@@ -51,6 +52,13 @@ def run(
         ),
     ] = False,
     workspace: Annotated[Path, typer.Option("--workspace", "-w")] = Path(".trap"),
+    environment: Annotated[
+        bool,
+        typer.Option(
+            "--environment/--no-environment",
+            help="Collect host machine environment info (CPU/RAM/OS/Python) into the report.",
+        ),
+    ] = True,
 ) -> None:
     """Run a task against a solution.
 
@@ -102,6 +110,15 @@ def run(
         task=LocalRepo.provenance_of(traptask_yaml_loader.traptask_dir),
     )
 
+    # Capture the host machine environment (CPU/RAM/OS/Python) unless disabled.
+    # Detection is best-effort and must never abort a completed run.
+    environment_info = None
+    if environment:
+        try:
+            environment_info = EnvironmentDetector().detect()
+        except Exception:
+            environment_info = None
+
     report_data = report_handle.save(
         cases=case_results,
         trap_config=trap_yaml_loader.config,
@@ -109,6 +126,7 @@ def run(
         finished_at_utc=finished_at_utc,
         grader_metrics=grader_metrics,
         provenance=provenance,
+        environment=environment_info,
     )
     renderer_factory(output).render(report_data)
 

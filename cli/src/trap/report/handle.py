@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from trap.models import CaseResult, Provenance, ReportData, TrapConfig
+from trap.models import CaseResult, Environment, Provenance, ReportData, TrapConfig
 
 _REPORT_FILENAME = "report.json"
 
@@ -31,6 +31,7 @@ class ReportHandle:
         finished_at_utc: datetime,
         grader_metrics: Any = None,
         provenance: Provenance | None = None,
+        environment: Environment | None = None,
     ) -> ReportData:
         data = ReportData.from_run(
             trap_config=trap_config,
@@ -39,6 +40,7 @@ class ReportHandle:
             finished_at_utc=finished_at_utc,
             grader_metrics=grader_metrics,
             provenance=provenance,
+            environment=environment,
         )
         self.report_json_path.write_text(data.model_dump_json(indent=2))
         return data
