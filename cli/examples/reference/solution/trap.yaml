@@ -25,6 +25,11 @@ stdin: input.json                 # [optional] default: null. Filename inside
                                   #            manifest — see manifest_envvar — with the
                                   #            input/output directory paths.)
 
+timeout: 600                      # [optional] default: 600. Per-case wall-clock ceiling in
+                                  #            seconds — a safety net against hangs/runaways,
+                                  #            NOT a fair budget (duration is recorded, so set
+                                  #            it generously). A timed-out case = did not complete.
+
 manifest_envvar: TRAP_MANIFEST    # [optional] default: TRAP_MANIFEST. Env var carrying
                                   #            the run manifest JSON {inputs_dir,
                                   #            outputs_dir}. Override only if the solution
@@ -70,8 +75,6 @@ tasks:
       # clone_to: .trap/repos/task  # [optional] ONLY valid when source is a git+ URL.
                                   #   default: hidden cache .trap/repos/<repo>. Setting it
                                   #   for a LOCAL source is an error.
-
-    timeout: 30                   # [optional] default: 30. Max seconds per case run.
 
   # A second binding is just another key — same solution, different task/version:
   # other-task:

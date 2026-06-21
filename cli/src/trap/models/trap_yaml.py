@@ -44,7 +44,6 @@ class Task(BaseModel):
     name: str = ""
     description: str = ""
     traptask: TaskSource = TaskSource()  # local path or git+ URL (+ optional clone_to)
-    timeout: int = 30
 
 
 class TrapConfig(BaseModel):
@@ -57,6 +56,10 @@ class TrapConfig(BaseModel):
     # Solution-author owned. Auto-runs on a remote clone/update; else `tp run --setup-solution`.
     setup_cmd: str | None = None
     stdin: str | None = None  # optional: filename in inputs/{case_id}/ piped to the solution's stdin
+    # per-case wall-clock ceiling (seconds). A safety net against hangs/runaways, not a
+    # fair budget — duration is recorded faithfully, so set it generously; a timed-out
+    # case = "did not complete". Solution-author owned.
+    timeout: int = 600
     # env var carrying the run manifest (inputs_dir / outputs_dir); override if needed
     manifest_envvar: str = "TRAP_MANIFEST"
     # optional leaderboard identity; None → server auto-assigns a serial name

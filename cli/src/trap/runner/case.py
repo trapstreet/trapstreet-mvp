@@ -42,7 +42,6 @@ class CaseRunner:
     def run(self) -> CaseResult:
         self.layout.outputs_dir.mkdir(parents=True, exist_ok=True)
 
-        task = self.runner.task
         trap_config = self.runner.trap_config
 
         proxy: CostProxy | None = None
@@ -64,7 +63,7 @@ class CaseRunner:
                 capture_output=True,
                 text=True,
                 cwd=self.runner.trap_dir,
-                timeout=task.timeout,
+                timeout=trap_config.timeout,
                 env={
                     **os.environ,
                     trap_config.manifest_envvar: self._manifest,

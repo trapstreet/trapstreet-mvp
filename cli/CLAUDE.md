@@ -36,14 +36,15 @@ field in trap.yaml — a single input filename). stdout/stderr/exit_code are alw
 captured automatically (see the `run` block below).
 
 **trap.yaml format** — a trap.yaml *is* one solution's file: its invariant
-settings (`cmd`, `setup_cmd`, `stdin`, `manifest_envvar`, `name`, `profile`, `extra`, `cost`) sit at
+settings (`cmd`, `setup_cmd`, `stdin`, `timeout`, `manifest_envvar`, `name`, `profile`, `extra`, `cost`) sit at
 the top level, with `tasks:` as the one nested collection of task bindings it is
-run against. Only per-task knobs (`traptask`, `description`, `timeout`) live under
+run against. Only per-task knobs (`traptask`, `description`) live under
 each task entry:
 ```yaml
 cmd: uv run python solution.py
 setup_cmd: uv sync             # optional: prepare the checkout once after clone; force with --setup-solution
 stdin: input.txt               # optional: pipe this input file to the solution's stdin
+timeout: 600                   # optional: per-case hang ceiling (seconds); safety net, not a budget
 manifest_envvar: TRAP_MANIFEST   # override the env var name if the solution needs another
 name: claude-sonnet-baseline   # optional leaderboard identity (else server auto-assigns)
 profile:                       # optional self-reported engine identity → report.json
@@ -59,7 +60,6 @@ tasks:                         # task bindings, keyed by name; `traptask` defaul
       source: ../task          # local path or git+ URL (polymorphic, like --solution)
       # source: git+https://github.com/org/repo@rev#subdirectory=X   # remote → cloned into clone_to
       # clone_to: .trap/repos/task   # optional clone target for a remote (default: hidden cache)
-    timeout: 30                # default 30s
 
   run:                         # second binding; same solution, different task source
     traptask:

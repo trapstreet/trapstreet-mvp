@@ -9,6 +9,7 @@ A trap.yaml *is* one solution's file: its invariant settings sit at the top leve
 ```yaml
 cmd: uv run python solution.py
 stdin: input.json            # optional
+timeout: 600                 # optional — per-case hang ceiling (seconds)
 manifest_envvar: TRAP_MANIFEST
 metadata:
   model: gpt-4o
@@ -22,7 +23,6 @@ tasks:
     description: optional — shown in the report header
     traptask:
       source: ../task
-    timeout: 30
 
   run:
     traptask:
@@ -44,6 +44,10 @@ Optional shell command that prepares the solution checkout once (e.g. `uv sync`,
 ### `stdin`
 
 Optional filename. trap pipes `inputs/{case_id}/{filename}` into the solution's stdin. The solution also receives the run manifest (input/output directory paths) via the env var named by `manifest_envvar`; see the [IO contract](io-contract.md).
+
+### `timeout`
+
+Per-case wall-clock ceiling in seconds. Default: `600`. It is a **safety net against hangs/runaways** (an infinite loop, a deadlock, a blocked read), **not a fair time budget** — each case's real `duration` is recorded in the report, so speed is compared on actual duration, not gated here. Set it generously (a timed-out case counts as "did not complete"). Solution-author owned; applies to every task this solution runs.
 
 ### `manifest_envvar`
 
@@ -105,7 +109,3 @@ The task source (relative to `trap.yaml`). The whole block is optional and defau
 ### `description`
 
 Optional label shown in the report header.
-
-### `timeout`
-
-Maximum seconds to wait for the solution subprocess. Default: `30`.
