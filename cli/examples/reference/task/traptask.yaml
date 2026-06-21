@@ -13,7 +13,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 setup_cmd: uv sync                # [optional] default: null. Shell command run in this
                                   #   dir. Auto-runs after a fresh clone / branch update of
-                                  #   a REMOTE task; otherwise force it with `tp run --setup`.
+                                  #   a REMOTE task; otherwise force it with `tp run --setup-task`.
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Where the fixtures live (paths relative to this traptask.yaml).

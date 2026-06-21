@@ -44,10 +44,17 @@ def run(
     tags: Annotated[list[str] | None, typer.Option("--tag", "-t")] = None,
     output: Annotated[OutputFormat, typer.Option("--output", "-o")] = OutputFormat.rich,
     fail_fast: Annotated[bool, typer.Option("--fail-fast")] = False,
-    setup: Annotated[
+    setup_solution: Annotated[
         bool,
         typer.Option(
-            "--setup",
+            "--setup-solution",
+            help="Force-run the solution's setup_cmd even when no remote pull brought new code.",
+        ),
+    ] = False,
+    setup_task: Annotated[
+        bool,
+        typer.Option(
+            "--setup-task",
             help="Force-run the task's setup_cmd even when no remote pull brought new code.",
         ),
     ] = False,
@@ -70,12 +77,13 @@ def run(
             solution,
             clone_to,
             allow_remote=True,
+            setup=setup_solution,
             progress_func=(
                 (lambda m: console.print(f"[dim]{m}[/dim]")) if output == OutputFormat.rich else None
             ),
         )
         task_obj = trap_yaml_loader.resolve_task(task)
-        traptask_yaml_loader = TraptaskLoader.from_task(task_obj, trap_yaml_loader.trap_dir, setup=setup)
+        traptask_yaml_loader = TraptaskLoader.from_task(task_obj, trap_yaml_loader.trap_dir, setup=setup_task)
     except (GitOpsError, subprocess.CalledProcessError) as e:
         raise _die(e) from None
 

@@ -37,6 +37,10 @@ The program under test. These fields are invariant across the tasks this solutio
 
 Shell command to invoke the solution. Parsed via `shlex.split` and run with the `trap.yaml` directory as `cwd`.
 
+### `setup_cmd`
+
+Optional shell command that prepares the solution checkout once (e.g. `uv sync`, `npm install`), run via the shell with the `trap.yaml` directory as `cwd`. Solution-author owned (it travels with the solution repo). trap auto-runs it when a remote pull brings new code (fresh clone or fast-forward); for an up-to-date/pinned clone or a local solution, force it with `tp run --setup-solution`. The symmetric counterpart of the task's `traptask.yaml` `setup_cmd` (forced independently by `--setup-task`).
+
 ### `stdin`
 
 Optional filename. trap pipes `inputs/{case_id}/{filename}` into the solution's stdin. The solution also receives the run manifest (input/output directory paths) via the env var named by `manifest_envvar`; see the [IO contract](io-contract.md).

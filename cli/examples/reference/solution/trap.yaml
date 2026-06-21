@@ -13,6 +13,12 @@
 cmd: uv run python solution.py    # [required] shell command, run via shlex.split,
                                   #            cwd = this trap.yaml's directory.
 
+setup_cmd: uv sync                # [optional] default: null. Prepares the checkout once
+                                  #            (e.g. uv sync / npm install). Runs via the
+                                  #            shell, cwd = this trap.yaml's directory.
+                                  #            Auto-runs after a remote clone/update;
+                                  #            otherwise force it with `tp run --setup-solution`.
+
 stdin: input.json                 # [optional] default: null. Filename inside
                                   #            inputs/<case>/ piped to the solution's
                                   #            stdin. (The solution also receives a run

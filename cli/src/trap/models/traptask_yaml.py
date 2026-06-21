@@ -27,7 +27,7 @@ class TraptaskCase(BaseModel):
 class TraptaskConfig(BaseModel):
     # Field order mirrors the canonical traptask.yaml layout.
     # Prepares the checkout (e.g. `uv sync`); task-author owned so every solution gets
-    # an identical env. Auto-runs on a remote clone/update; else `tp run --setup`.
+    # an identical env. Auto-runs on a remote clone/update; else `tp run --setup-task`.
     setup_cmd: str | None = None
     dirs: DirsConfig = DirsConfig()
     # Advisory contract: filenames (and/or `stdout`/`stderr`) the solution writes.

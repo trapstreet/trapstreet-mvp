@@ -74,4 +74,4 @@ Optional shell command that prepares the task checkout (e.g. `uv sync` to instal
 
 Because it lives in `traptask.yaml`, the setup travels with the task version, so every solution author who points at the same task commit gets an identical environment — runs stay reproducible and comparable.
 
-It **auto-runs** when a remote pull brings new code (a fresh clone or a branch fast-forward). For an already-current clone, a pinned-SHA clone, or a local task source it does not run automatically; force it with `tp run --setup`.
+It **auto-runs** when a remote pull brings new code (a fresh clone or a branch fast-forward). For an already-current clone, a pinned-SHA clone, or a local task source it does not run automatically; force it with `tp run --setup-task`.

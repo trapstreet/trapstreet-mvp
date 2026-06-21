@@ -53,6 +53,9 @@ class TrapConfig(BaseModel):
     # bindings it is run against.
     # Field order mirrors the canonical trap.yaml layout.
     cmd: str  # run via shlex.split, cwd = the trap.yaml directory
+    # Prepares the solution checkout once after clone (e.g. `uv sync`, `npm install`).
+    # Solution-author owned. Auto-runs on a remote clone/update; else `tp run --setup-solution`.
+    setup_cmd: str | None = None
     stdin: str | None = None  # optional: filename in inputs/{case_id}/ piped to the solution's stdin
     # env var carrying the run manifest (inputs_dir / outputs_dir); override if needed
     manifest_envvar: str = "TRAP_MANIFEST"

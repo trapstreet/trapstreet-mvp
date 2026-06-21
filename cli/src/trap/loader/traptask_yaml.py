@@ -44,7 +44,7 @@ class TraptaskLoader:
 
         The task's `setup_cmd` (declared in its traptask.yaml, so it travels with the
         task version) prepares the checkout. It auto-runs when a remote pull brought
-        new code, and otherwise only when `setup` is set (the `tp run --setup`
+        new code, and otherwise only when `setup` is set (the `tp run --setup-task`
         escape hatch covering pinned/up-to-date clones and local sources).
         """
         from trap.git_ops import GitOpsError, ParsedGitUrl, RemoteRepo

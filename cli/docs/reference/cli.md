@@ -19,7 +19,8 @@ tp run [TASK] [OPTIONS]
 | `--tag / -t` | (none) | Filter cases by tag; repeatable |
 | `--output / -o` | `rich` | Report renderer: `rich` or `json` |
 | `--fail-fast` | `false` | Stop after the first case whose solution exits non-zero |
-| `--setup` | `false` | Force-run the task's `setup_cmd` even when no remote pull brought new code (covers pinned/up-to-date clones and local task sources) |
+| `--setup-solution` | `false` | Force-run the solution's `setup_cmd` even when no remote pull brought new code |
+| `--setup-task` | `false` | Force-run the task's `setup_cmd` even when no remote pull brought new code |
 | `--workspace / -w` | `.trap` | Directory to write run artifacts |
 
 **Exit codes:**

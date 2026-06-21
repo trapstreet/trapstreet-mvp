@@ -36,12 +36,13 @@ field in trap.yaml — a single input filename). stdout/stderr/exit_code are alw
 captured automatically (see the `run` block below).
 
 **trap.yaml format** — a trap.yaml *is* one solution's file: its invariant
-settings (`cmd`, `stdin`, `manifest_envvar`, `name`, `profile`, `extra`, `cost`) sit at
+settings (`cmd`, `setup_cmd`, `stdin`, `manifest_envvar`, `name`, `profile`, `extra`, `cost`) sit at
 the top level, with `tasks:` as the one nested collection of task bindings it is
 run against. Only per-task knobs (`traptask`, `description`, `timeout`) live under
 each task entry:
 ```yaml
 cmd: uv run python solution.py
+setup_cmd: uv sync             # optional: prepare the checkout once after clone; force with --setup-solution
 stdin: input.txt               # optional: pipe this input file to the solution's stdin
 manifest_envvar: TRAP_MANIFEST   # override the env var name if the solution needs another
 name: claude-sonnet-baseline   # optional leaderboard identity (else server auto-assigns)
@@ -92,7 +93,14 @@ tasks:                         # task bindings, keyed by name; `traptask` defaul
   solution that points at the same task commit gets an identical setup, so runs
   stay reproducible and comparable (a solution author cannot diverge it). trap
   auto-runs it when a remote pull brings new code (fresh clone or fast-forward);
-  for an up-to-date/pinned clone or a local source, force it with `tp run --setup`
+  for an up-to-date/pinned clone or a local source, force it with `tp run --setup-task`
+- The **solution** has a symmetric `setup_cmd` in trap.yaml (`TrapConfig.setup_cmd`,
+  run by `TrapLoader.from_solution` with the same auto-on-pull rule, forced by
+  `--setup-solution`). It is **solution-author owned** — each solution prepares its own
+  checkout (deps, build) and only reproduces itself, so it doesn't affect
+  cross-solution comparability (unlike the task one, which is fixed per task version).
+  The two setups are independent: `--setup-solution` and `--setup-task` force each side
+  separately.
 
 **Filename convention**: `inputs_dir`, `expected_dir`, and `outputs_dir` are
 directory paths; the consumer joins them with conventional filenames including
