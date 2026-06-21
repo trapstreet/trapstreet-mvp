@@ -120,7 +120,7 @@ def run(
             environment_info = None
 
     report_data = report_handle.save(
-        cases=case_results,
+        case_results=case_results,
         trap_config=trap_yaml_loader.config,
         started_at_utc=started_at_local.astimezone(UTC),
         finished_at_utc=finished_at_utc,

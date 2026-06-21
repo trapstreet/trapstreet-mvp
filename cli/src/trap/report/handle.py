@@ -25,8 +25,8 @@ class ReportHandle:
 
     def save(
         self,
-        cases: tuple[CaseResult, ...],
         trap_config: TrapConfig,
+        case_results: tuple[CaseResult, ...],
         started_at_utc: datetime,
         finished_at_utc: datetime,
         grader_metrics: Any = None,
@@ -35,11 +35,11 @@ class ReportHandle:
     ) -> ReportData:
         data = ReportData.from_run(
             trap_config=trap_config,
-            cases_results=cases,
+            provenance=provenance,
+            cases_results=case_results,
             started_at_utc=started_at_utc,
             finished_at_utc=finished_at_utc,
             grader_metrics=grader_metrics,
-            provenance=provenance,
             environment=environment,
         )
         self.report_json_path.write_text(data.model_dump_json(indent=2))
