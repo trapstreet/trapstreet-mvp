@@ -7,18 +7,17 @@ A trap.yaml *is* one solution's file: its invariant settings sit at the top leve
 ## Full example
 
 ```yaml
-cmd: uv run python solution.py
-stdin: input.json            # optional
-timeout: 600                 # optional — per-case hang ceiling (seconds)
-manifest_envvar: TRAP_MANIFEST
-metadata:
+name: claude-sonnet-baseline   # optional leaderboard identity
+profile:
   model: gpt-4o
   framework: langchain
-name: claude-sonnet-baseline   # optional leaderboard identity
+stdin: input.json            # optional
+cmd: uv run python solution.py
+manifest_envvar: TRAP_MANIFEST
+timeout: 600                 # optional — per-case hang ceiling (seconds)
 
 tasks:
   test:
-    description: optional — shown in the report header
     traptask:
       source: ../task
 

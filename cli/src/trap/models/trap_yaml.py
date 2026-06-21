@@ -46,21 +46,21 @@ class TrapConfig(BaseModel):
     # level (flat, 1:1 with the YAML), and `tasks` is the collection of task
     # bindings it is run against.
     # Field order mirrors the canonical trap.yaml layout.
-    cmd: str  # run via shlex.split, cwd = the trap.yaml directory
-    # Prepares the solution checkout once after clone (e.g. `uv sync`, `npm install`).
-    # Solution-author owned. Auto-runs on a remote clone/update; else `tp run --setup-solution`.
-    setup_cmd: str | None = None
-    stdin: str | None = None  # optional: filename in inputs/{case_id}/ piped to the solution's stdin
-    # per-case wall-clock ceiling (seconds). A safety net against hangs/runaways, not a
-    # fair budget — duration is recorded faithfully, so set it generously; a timed-out
-    # case = "did not complete". Solution-author owned.
-    timeout: int = 600
-    # env var carrying the run manifest (inputs_dir / outputs_dir); override if needed
-    manifest_envvar: str = "TRAP_MANIFEST"
     # optional leaderboard identity; None → server auto-assigns a serial name
     name: str | None = None
     # self-reported engine identity (model/framework); plumbed to report.json `profile`
     profile: Profile = Field(default_factory=Profile)
+    # Prepares the solution checkout once after clone (e.g. `uv sync`, `npm install`).
+    # Solution-author owned. Auto-runs on a remote clone/update; else `tp run --setup-solution`.
+    setup_cmd: str | None = None
+    stdin: str | None = None  # optional: filename in inputs/{case_id}/ piped to the solution's stdin
+    cmd: str  # run via shlex.split, cwd = the trap.yaml directory
+    # env var carrying the run manifest (inputs_dir / outputs_dir); override if needed
+    manifest_envvar: str = "TRAP_MANIFEST"
+    # per-case wall-clock ceiling (seconds). A safety net against hangs/runaways, not a
+    # fair budget — duration is recorded faithfully, so set it generously; a timed-out
+    # case = "did not complete". Solution-author owned.
+    timeout: int = 600
     # free-form escape hatch for author notes; tolerated but never written to the report
     extra: dict[str, Any] = {}
     tasks: dict[str, Task]

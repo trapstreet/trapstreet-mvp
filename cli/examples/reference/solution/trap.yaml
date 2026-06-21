@@ -10,8 +10,17 @@
 # tasks below, so they live at the top level (not repeated per task).
 # ─────────────────────────────────────────────────────────────────────────────
 
-cmd: uv run python solution.py    # [required] shell command, run via shlex.split,
-                                  #            cwd = this trap.yaml's directory.
+name: claude-sonnet-baseline      # [optional] default: null → server auto-assigns a
+                                  #            serial name. Leaderboard identity: lets one
+                                  #            person submit several named agents.
+                                    
+
+profile:                          # [optional] self-reported engine identity, written to
+  model: claude-sonnet-4          #            the report and shown on the run page. STRICT:
+  framework: my-agent             #            only `model` and `framework`. Each takes a
+                                  #            scalar OR a list (a run may use several);
+                                  #            values are normalised to a list in the report.
+                                  #            e.g. model: [gpt-4o-mini, gpt-4o]
 
 setup_cmd: uv sync                # [optional] default: null. Prepares the checkout once
                                   #            (e.g. uv sync / npm install). Runs via the
@@ -24,27 +33,16 @@ stdin: input.json                 # [optional] default: null. Filename inside
                                   #            stdin. (The solution also receives a run
                                   #            manifest — see manifest_envvar — with the
                                   #            input/output directory paths.)
-
-timeout: 600                      # [optional] default: 600. Per-case wall-clock ceiling in
-                                  #            seconds — a safety net against hangs/runaways,
-                                  #            NOT a fair budget (duration is recorded, so set
-                                  #            it generously). A timed-out case = did not complete.
-
+cmd: uv run python solution.py    # [required] shell command, run via shlex.split,
+                                  #            cwd = this trap.yaml's directory.
 manifest_envvar: TRAP_MANIFEST    # [optional] default: TRAP_MANIFEST. Env var carrying
                                   #            the run manifest JSON {inputs_dir,
                                   #            outputs_dir}. Override only if the solution
                                   #            already uses this variable name.
-
-name: claude-sonnet-baseline      # [optional] default: null → server auto-assigns a
-                                  #            serial name. Leaderboard identity: lets one
-                                  #            person submit several named agents.
-
-profile:                          # [optional] self-reported engine identity, written to
-  model: claude-sonnet-4          #            the report and shown on the run page. STRICT:
-  framework: my-agent             #            only `model` and `framework`. Each takes a
-                                  #            scalar OR a list (a run may use several);
-                                  #            values are normalised to a list in the report.
-                                  #            e.g. model: [gpt-4o-mini, gpt-4o]
+timeout: 600                      # [optional] default: 600. Per-case wall-clock ceiling in
+                                  #            seconds — a safety net against hangs/runaways,
+                                  #            NOT a fair budget (duration is recorded, so set
+                                  #            it generously). A timed-out case = did not complete.
 
 extra:                            # [optional] default: {}. Free-form escape hatch for
   max_tokens: 4096                #            author notes. Tolerated but NEVER uploaded to
