@@ -2,13 +2,16 @@
 from __future__ import annotations
 
 import subprocess
-from collections.abc import Callable
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import yaml
 
 from trap.models import Task
 from trap.models.trap_yaml import TrapConfig
+
+if TYPE_CHECKING:
+    from trap.git_ops.base import ProgressCallback
 
 
 class TrapLoader:
@@ -40,7 +43,7 @@ class TrapLoader:
         *,
         allow_remote: bool = False,
         setup: bool = False,
-        progress_func: Callable[[str], None] | None = None,
+        progress_func: ProgressCallback = None,
     ) -> TrapLoader:
         """Resolve a --solution spec to a loaded TrapLoader (relative to cwd).
 
