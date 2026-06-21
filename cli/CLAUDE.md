@@ -36,7 +36,7 @@ field in trap.yaml — a single input filename). stdout/stderr/exit_code are alw
 captured automatically (see the `run` block below).
 
 **trap.yaml format** — a trap.yaml *is* one solution's file: its invariant
-settings (`cmd`, `setup_cmd`, `stdin`, `timeout`, `manifest_envvar`, `name`, `profile`, `extra`, `cost`) sit at
+settings (`cmd`, `setup_cmd`, `stdin`, `timeout`, `manifest_envvar`, `name`, `profile`, `extra`) sit at
 the top level, with `tasks:` as the one nested collection of task bindings it is
 run against. Only per-task knobs (`traptask`, `description`) live under
 each task entry:
@@ -52,7 +52,7 @@ profile:                       # optional self-reported engine identity → repo
   framework: stdlib-python
 extra:                         # optional free-form author notes; never written to the report
   notes: anything
-# cost: {enabled: false}       # optional; omit to auto-detect from env
+# (cost tracking is a CLI toggle now: tp run --no-cost; on by default, providers auto-detected)
 
 tasks:                         # task bindings, keyed by name; `traptask` defaults to ../task
   test:
@@ -165,8 +165,8 @@ is needed — `_ProxyHandler` always knows which provider it's serving from `sel
 
 **Auto-detection**: activates when an API key env var is present (`ANTHROPIC_API_KEY`,
 `OPENAI_API_KEY`, etc.), or unconditionally (`always_intercept=True`) for OAuth-based tools like
-Claude Code that set no key env var but still honour `ANTHROPIC_BASE_URL`. Disable with
-`cost: {enabled: false}` in trap.yaml.
+Claude Code that set no key env var but still honour `ANTHROPIC_BASE_URL`. On by default;
+disable per run with `tp run --no-cost` (the `cost_enabled` flag threaded into `TaskRunner`).
 
 **Provider support**:
 
@@ -204,27 +204,14 @@ pricing table (e.g. Mistral models), token counts are tracked but `cost_usd` is 
 (`prompt_tok`, `compl_tok`, `cost`). Per-model breakdown is available in `report.json`
 (`cost.by_model`) but not rendered in the terminal output.
 
-**trap.yaml**:
-```yaml
-cmd: uv run python solution.py
-cost:
-  enabled: false   # omit to auto-detect from env
-tasks:
-  test:
-    traptask:
-      source: ../task
-```
+**Toggle**: on by default; `tp run --no-cost` disables it for that run (CLI flag, not a
+trap.yaml field — cost is observability, not a result-affecting solution setting).
 
 ### `tracing` — internal LLM call logs (planned)
 
 Will record per-call details: prompt content, completion content, latency, cache hits, chain steps.
-Shares the same proxy mechanism as `cost`. Not yet implemented.
-
-**trap.yaml** (future):
-```yaml
-    tracing:
-      enabled: true
-```
+Shares the same proxy mechanism as `cost`. Not yet implemented. Being observability (like
+`cost`), it will be a CLI toggle — `tp run --tracing` — not a trap.yaml field.
 
 ---
 

@@ -15,8 +15,6 @@ metadata:
   model: gpt-4o
   framework: langchain
 name: claude-sonnet-baseline   # optional leaderboard identity
-cost:
-  enabled: false             # omit to auto-detect from env
 
 tasks:
   test:
@@ -78,20 +76,9 @@ Free-form dict for author notes. Tolerated but **never written to the report** â
 
 Optional string. When set, `tp submit` creates (or reuses) a named solution identity on the leaderboard under the authenticated user, instead of auto-assigning a serial name. Useful when one person runs multiple agents in parallel.
 
-### `cost`
+### cost tracking
 
-Controls LLM cost tracking.
-
-```yaml
-cost:
-  enabled: false    # omit to auto-detect from env vars; set false to disable
-```
-
-| Field | Default | Description |
-|---|---|---|
-| `enabled` | `true` (auto) | `false` disables the proxy entirely |
-
-Omitting the `cost` key activates auto-detection: cost tracking starts when a supported API key env var is present (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GROQ_API_KEY`, `MISTRAL_API_KEY`) or when Claude Code is available. See the [cost tracking guide](../guides/cost-tracking.md) for provider support details.
+LLM token/spend tracking is **not** a trap.yaml field â€” it's a run-time, observability-only toggle, so it lives on the CLI. It is on by default; disable it per run with `tp run --no-cost`. Which providers are tracked is auto-detected from env (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GROQ_API_KEY`, `MISTRAL_API_KEY`, or Claude Code). See the [cost tracking guide](../guides/cost-tracking.md).
 
 ## `tasks` block
 

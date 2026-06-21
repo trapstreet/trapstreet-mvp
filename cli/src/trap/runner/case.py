@@ -46,7 +46,7 @@ class CaseRunner:
 
         proxy: CostProxy | None = None
         proxy_env: dict[str, str] = {}
-        if trap_config.cost_enabled:
+        if self.runner.cost_enabled:
             try:
                 proxy = CostProxy()
                 proxy.start()

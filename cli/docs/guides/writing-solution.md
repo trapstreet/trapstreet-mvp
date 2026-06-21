@@ -101,12 +101,10 @@ client = Mistral(
 )
 ```
 
-To disable cost tracking:
+To disable cost tracking for a run, pass `--no-cost`:
 
-```yaml
-cmd: uv run python solution.py
-cost:
-  enabled: false
+```bash
+tp run --no-cost
 ```
 
 → [Full cost tracking guide](cost-tracking.md)

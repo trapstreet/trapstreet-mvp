@@ -51,10 +51,6 @@ extra:                            # [optional] default: {}. Free-form escape hat
                                   #            the report — keep arbitrary keys here, out of
                                   #            the strict `profile` above.
 
-cost:                             # [optional] OMIT this block to auto-detect from env
-  enabled: true                   #            (tracking turns on when an API key env var
-                                  #            is present). Set enabled: false to disable.
-
 # ─────────────────────────────────────────────────────────────────────────────
 # Tasks — the task bindings this solution is run against.
 # Each map KEY is the task name (it is BOTH the local run-dir name AND the

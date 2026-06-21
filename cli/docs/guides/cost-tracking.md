@@ -135,20 +135,15 @@ The terminal table shows per-case aggregates. Per-model breakdown is in `report.
 
 ## Disabling cost tracking
 
-Add to `trap.yaml`:
+Cost tracking is a run-time toggle, not a `trap.yaml` field. It's on by default;
+disable it for a run with `--no-cost`:
 
-```yaml
-cmd: uv run python solution.py
-cost:
-  enabled: false
-
-tasks:
-  test:
-    traptask:
-      source: ../task
+```bash
+tp run --no-cost
 ```
 
-Omitting the `cost` key means auto-detect from env vars (the default).
+By default (`--cost`), tracking auto-detects providers from env vars (see above);
+with no key set and no always-intercept provider, it's effectively a no-op anyway.
 
 ---
 

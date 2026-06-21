@@ -66,6 +66,13 @@ def run(
             help="Collect host machine environment info (CPU/RAM/OS/Python) into the report.",
         ),
     ] = True,
+    cost: Annotated[
+        bool,
+        typer.Option(
+            "--cost/--no-cost",
+            help="Track LLM token usage and spend via the proxy (auto-detects providers from env).",
+        ),
+    ] = True,
 ) -> None:
     """Run a task against a solution.
 
@@ -100,6 +107,7 @@ def run(
         traptask_config=traptask_yaml_loader.traptask,
         traptask_dir=traptask_yaml_loader.traptask_dir,
         run_dir=report_handle.run_dir,
+        cost_enabled=cost,
     )
     prog_console = console if output == OutputFormat.rich else None
     with CaseProgress(active_cases, console=prog_console) as prog:

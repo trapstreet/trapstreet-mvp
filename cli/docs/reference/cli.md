@@ -21,6 +21,7 @@ tp run [TASK] [OPTIONS]
 | `--fail-fast` | `false` | Stop after the first case whose solution exits non-zero |
 | `--setup-solution` | `false` | Force-run the solution's `setup_cmd` even when no remote pull brought new code |
 | `--setup-task` | `false` | Force-run the task's `setup_cmd` even when no remote pull brought new code |
+| `--cost / --no-cost` | `--cost` (on) | Track LLM token usage/spend via the proxy (providers auto-detected from env) |
 | `--workspace / -w` | `.trap` | Directory to write run artifacts |
 
 **Exit codes:**

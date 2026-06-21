@@ -21,6 +21,7 @@ class TaskRunner:
         traptask_dir: Path,
         traptask_config: TraptaskConfig,
         run_dir: Path,
+        cost_enabled: bool = True,
     ) -> None:
         self.task = task_obj
         self.trap_config = trap_config
@@ -28,6 +29,7 @@ class TaskRunner:
         self.traptask_config = traptask_config
         self.traptask_dir = traptask_dir
         self.run_dir = run_dir
+        self.cost_enabled = cost_enabled
 
         self.task_inputs_dir = (traptask_dir / traptask_config.dirs.inputs).resolve()
         self.task_expected_dir = (traptask_dir / traptask_config.dirs.expected).resolve()

@@ -24,10 +24,6 @@ class Profile(BaseModel):
         return v
 
 
-class CostConfig(BaseModel):
-    enabled: bool = True
-
-
 class TaskSource(BaseModel):
     # local task dir XOR git+ URL (relative to trap.yaml), same polymorphic form
     # as --solution; omitted → ../task. A git+ URL clones into clone_to.
@@ -68,9 +64,4 @@ class TrapConfig(BaseModel):
     profile: Profile = Field(default_factory=Profile)
     # free-form escape hatch for author notes; tolerated but never written to the report
     extra: dict[str, Any] = {}
-    cost: CostConfig | None = None  # None = auto-detect from env; set enabled: false to disable
     tasks: dict[str, Task]
-
-    @property
-    def cost_enabled(self) -> bool:
-        return self.cost is None or self.cost.enabled
