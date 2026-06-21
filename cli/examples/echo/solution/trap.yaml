@@ -13,7 +13,6 @@ tasks:
   # Local task name = trapstreet task_id so `tp submit` Just Works
   # without --as flag.
   echo:
-    description: Echo solution — reads stdin JSON and writes it back to stdout
     traptask:
       source: ../task
 

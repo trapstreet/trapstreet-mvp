@@ -61,8 +61,6 @@ extra:                            # [optional] default: {}. Free-form escape hat
 tasks:
   example-task:                   # [required] at least one entry; the key is the name.
 
-    description: optional label   # [optional] default: "". Shown in the report header.
-
     traptask:                     # [optional] the whole block defaults to {source: ../task}.
       source: ../task             # [required-in-block] EITHER a local path (relative to
                                   #   this trap.yaml) OR a git+ URL. Pick one form:

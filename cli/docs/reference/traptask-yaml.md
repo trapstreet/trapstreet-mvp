@@ -7,6 +7,8 @@ The entire file is optional. If absent, trap scans `inputs/` and treats each sub
 ## Full example
 
 ```yaml
+name: Reference task   # optional human-readable title (task-author owned)
+
 dirs:
   inputs: inputs/
   expected: expected/
@@ -31,6 +33,10 @@ setup_cmd: uv sync   # optional: prepare the checkout (e.g. install judge deps)
 ```
 
 ## Fields
+
+### `name`
+
+Optional human-readable title for the task. Default: none. Task-author owned — it travels with the task version, so every solution that runs this task sees the same title. Consumers (e.g. the leaderboard) read it from the task repo via the run's `provenance.task` (repo + commit), not from any one solution's config.
 
 ### `dirs`
 

@@ -26,6 +26,10 @@ class TraptaskCase(BaseModel):
 
 class TraptaskConfig(BaseModel):
     # Field order mirrors the canonical traptask.yaml layout.
+    # Optional human-readable title for the task; task-author owned. Read from the task
+    # repo (via the report's provenance.task), so it stays consistent across every
+    # solution that runs this task version.
+    name: str | None = None
     # Prepares the checkout (e.g. `uv sync`); task-author owned so every solution gets
     # an identical env. Auto-runs on a remote clone/update; else `tp run --setup-task`.
     setup_cmd: str | None = None

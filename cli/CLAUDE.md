@@ -38,8 +38,7 @@ captured automatically (see the `run` block below).
 **trap.yaml format** — a trap.yaml *is* one solution's file: its invariant
 settings (`cmd`, `setup_cmd`, `stdin`, `timeout`, `manifest_envvar`, `name`, `profile`, `extra`) sit at
 the top level, with `tasks:` as the one nested collection of task bindings it is
-run against. Only per-task knobs (`traptask`, `description`) live under
-each task entry:
+run against. Only the per-task knob `traptask` lives under each task entry:
 ```yaml
 cmd: uv run python solution.py
 setup_cmd: uv sync             # optional: prepare the checkout once after clone; force with --setup-solution
@@ -67,6 +66,7 @@ tasks:                         # task bindings, keyed by name; `traptask` defaul
 ```
 
 **Task side** — `traptask.yaml` is optional. If absent, trap auto-discovers cases by scanning `inputs/` subdirectories and runs in output-only mode (no judge/grader/expected). When present:
+- `name` in traptask.yaml is an **optional** human-readable task title, task-author owned. It is **not** plumbed into the report — consumers read it from the task repo via the run's `provenance.task` (repo + commit), keeping it consistent across every solution that runs this task version. (The solution side's old per-binding `description` was removed: a solution shouldn't describe the task.)
 - `judge` and `grader` in traptask.yaml are optional; omitting either skips that step
 - judge receives `TRAPTASK_MANIFEST` (JSON string, not a file path) with two tiers:
   - **filesystem directories** — `inputs_dir`, `expected_dir`, `outputs_dir` (all

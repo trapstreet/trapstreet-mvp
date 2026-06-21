@@ -6,6 +6,11 @@
 # inputs/ and treats each subdirectory as a case in output-only mode (no judge,
 # no grader, no expected/).
 
+name: Reference task              # [optional] default: null. Human-readable task title,
+                                  #   task-author owned. Consumers read it from this repo
+                                  #   (via the run's provenance.task), so it's the same for
+                                  #   every solution that runs this task version.
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Setup — prepares the task checkout (the first thing that happens to it).
 # Task-author owned, so it travels with the task version and every solution

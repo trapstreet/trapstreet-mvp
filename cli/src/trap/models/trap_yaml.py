@@ -38,7 +38,6 @@ class Task(BaseModel):
     # that legitimately vary per task. Solution-invariant settings sit at the
     # top level of trap.yaml (see TrapConfig).
     name: str = ""
-    description: str = ""
     traptask: TaskSource = TaskSource()  # local path or git+ URL (+ optional clone_to)
 
 

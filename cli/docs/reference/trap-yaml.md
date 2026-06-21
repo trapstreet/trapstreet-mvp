@@ -92,7 +92,3 @@ The task source (relative to `trap.yaml`). The whole block is optional and defau
 |---|---|---|
 | `source` | `../task` | Local path or git+ URL (polymorphic, like `--solution`). A git+ URL is cloned. |
 | `clone_to` | hidden cache `.trap/repos/<repo>` | Clone target for a remote source. Only valid when `source` is a URL. |
-
-### `description`
-
-Optional label shown in the report header.
