@@ -75,7 +75,7 @@ Optional string. When set, `tp submit` creates (or reuses) a named solution iden
 
 ### cost tracking
 
-LLM token/spend tracking is **not** a trap.yaml field — it's a run-time, observability-only toggle, so it lives on the CLI. It is on by default; disable it per run with `tp run --no-cost`. Which providers are tracked is auto-detected from env (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GROQ_API_KEY`, `MISTRAL_API_KEY`, or Claude Code). See the [cost tracking guide](../guides/cost-tracking.md).
+LLM token/spend tracking is **not** a trap.yaml field — it's a run-time, observability-only toggle, so it lives on the CLI. It is on by default; disable it per run with `tp run --no-cost`. Which providers are tracked is auto-detected from env (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `MISTRAL_API_KEY`, or Claude Code). See the [cost tracking guide](../guides/cost-tracking.md).
 
 ## `tasks` block
 

@@ -109,12 +109,6 @@ class _ProviderRegistry:
             style=_ProtocolStyle.OPENAI_COMPATIBLE,
             always_intercept=True,
         ),
-        "groq": _ProviderConfig(
-            "GROQ_API_KEY",
-            "GROQ_BASE_URL",
-            "https://api.groq.com/openai/v1",
-            style=_ProtocolStyle.OPENAI_COMPATIBLE,
-        ),
         "mistral": _ProviderConfig(
             "MISTRAL_API_KEY",
             "MISTRAL_BASE_URL",

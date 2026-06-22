@@ -173,7 +173,6 @@ disable per run with `tp run --no-cost` (the `cost_enabled` flag threaded into `
 | Anthropic API | Full | SDK auto-reads `ANTHROPIC_BASE_URL` |
 | OpenAI | Full | SDK auto-reads `OPENAI_BASE_URL` |
 | Claude Code (`claude -p`) | Full | OAuth; `always_intercept=True` |
-| Groq | Full | SDK auto-reads `GROQ_BASE_URL` |
 | Mistral | Limited | SDK does **not** auto-read `MISTRAL_BASE_URL`; solution must pass `server_url=os.environ.get("MISTRAL_BASE_URL")` explicitly |
 | AWS Bedrock | None | SDK-level auth (SigV4); no redirectable base URL |
 | Google Vertex AI | None | SDK-level auth (Google OAuth); no redirectable base URL |
@@ -183,7 +182,6 @@ URL is overridden. The proxy upstream in `_ProviderConfig` must compensate:
 - Anthropic SDK: includes `/v1` in the path → upstream `https://api.anthropic.com` (no suffix)
 - OpenAI SDK: drops `/v1` from the path when `base_url` is overridden → upstream `https://api.openai.com/v1`
 - Mistral SDK: includes `/v1` in the path → upstream `https://api.mistral.ai` (no suffix)
-- Groq SDK (openai-based): drops path prefix → upstream `https://api.groq.com/openai/v1`
 
 **Multi-provider / multi-model design**: a single case can call multiple providers and multiple
 models. The data model tracks them separately:

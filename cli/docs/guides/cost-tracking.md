@@ -20,7 +20,6 @@ Cost tracking activates automatically when an API key env var is present in the 
 |---|---|
 | Anthropic | `ANTHROPIC_API_KEY` |
 | OpenAI | `OPENAI_API_KEY` |
-| Groq | `GROQ_API_KEY` |
 | Mistral | `MISTRAL_API_KEY` |
 
 **Claude Code** (`claude -p`) is always intercepted regardless of env vars, because it authenticates via OAuth rather than an API key.
@@ -39,7 +38,6 @@ These providers work out of the box. trap redirects the base URL env var and the
 |---|---|---|
 | Anthropic API | `anthropic` | `ANTHROPIC_BASE_URL` |
 | OpenAI | `openai` | `OPENAI_BASE_URL` |
-| Groq | `groq` | `GROQ_BASE_URL` |
 | Claude Code (`claude -p`) | — | `ANTHROPIC_BASE_URL` |
 
 **Example — Anthropic:**
