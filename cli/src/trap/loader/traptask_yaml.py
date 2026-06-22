@@ -49,18 +49,17 @@ class TraptaskLoader:
         """
         from trap.git_ops import GitOpsError, ParsedGitUrl, RemoteRepo
 
-        spec = task.traptask
-        if ParsedGitUrl.looks_remote(spec.source):
-            parsed = ParsedGitUrl.from_full_url(spec.source)
-            dest = spec.clone_to or Path(".trap") / "repos" / parsed.basename
+        if ParsedGitUrl.looks_remote(task.source):
+            parsed = ParsedGitUrl.from_full_url(task.source)
+            dest = task.clone_to or Path(".trap") / "repos" / parsed.basename
             remote_repo = RemoteRepo(parsed, (trap_dir / dest).resolve())
             is_local_changed = remote_repo.ensure()
             traptask_dir = remote_repo.local_dir
         else:
-            if spec.clone_to is not None:
-                raise GitOpsError("traptask.clone_to only applies to a remote (git URL) source")
+            if task.clone_to is not None:
+                raise GitOpsError("clone_to only applies to a remote (git URL) source")
             is_local_changed = False
-            traptask_dir = (trap_dir / spec.source).resolve()
+            traptask_dir = (trap_dir / task.source).resolve()
         loader = cls(traptask_dir / "traptask.yaml")
         if (is_local_changed or setup) and loader.traptask.setup_cmd:
             # raises subprocess.CalledProcessError on non-zero exit

@@ -10,12 +10,10 @@ extra:
   notes: reference solution
 
 tasks:
-  # Local task name = trapstreet task_id so `tp submit` Just Works
+  # Local task alias = trapstreet task_id so `tp submit` Just Works
   # without --as flag.
   echo:
-    traptask:
-      source: ../task
+    source: ../task
 
   run:
-    traptask:
-      source: ../task
+    source: ../task

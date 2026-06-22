@@ -98,7 +98,7 @@ def run(
 
     started_at_local = datetime.now()
     ts = started_at_local.isoformat(timespec="seconds")
-    report_handle = ReportHandle(workspace.resolve(), task_obj.name, ts)
+    report_handle = ReportHandle(workspace.resolve(), task_obj.alias, ts)
 
     runner = TaskRunner(
         task_obj=task_obj,
@@ -163,10 +163,10 @@ def report(
 ) -> None:
     """Display a report for a task (defaults to latest run)."""
     try:
-        task_name = TrapLoader.from_solution(solution).resolve_task(task).name
+        task_alias = TrapLoader.from_solution(solution).resolve_task(task).alias
     except GitOpsError as e:
         raise _die(e) from None
-    report_data = ReportHandle(workspace.resolve(), task_name, run).load()
+    report_data = ReportHandle(workspace.resolve(), task_alias, run).load()
     renderer_factory(output).render(report_data)
 
 
@@ -229,14 +229,14 @@ def submit(
         if not report.exists():
             console.print(f"[red]error[/red]: no file at {report}")
             raise typer.Exit(code=2)
-        task_name = task
+        task_alias = task
         report_path = report
     else:
         try:
-            task_name = TrapLoader.from_solution(solution).resolve_task(task).name
+            task_alias = TrapLoader.from_solution(solution).resolve_task(task).alias
         except GitOpsError as e:
             raise _die(e) from None
-        report_handle = ReportHandle(workspace.resolve(), task_name, run)
+        report_handle = ReportHandle(workspace.resolve(), task_alias, run)
         try:
             report_handle.assert_exists()
         except FileNotFoundError:
@@ -248,7 +248,7 @@ def submit(
         report_path = report_handle.report_json_path
 
     client = ApiClient(resolved_server, resolved_key)
-    resp_data = client.submit(task_name, report_path)
+    resp_data = client.submit(task_alias, report_path)
     render_submit_result(resp_data)
 
 

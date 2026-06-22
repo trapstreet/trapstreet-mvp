@@ -38,7 +38,7 @@ captured automatically (see the `run` block below).
 **trap.yaml format** — a trap.yaml *is* one solution's file: its invariant
 settings (`name`, `profile`, `setup_cmd`, `stdin`, `cmd`, `manifest_envvar`, `timeout`, `extra`) sit at
 the top level, with `tasks:` as the one nested collection of task bindings it is
-run against. Only the per-task knob `traptask` lives under each task entry:
+run against. Each binding is just the task's `source` (+ optional `clone_to`):
 ```yaml
 name: claude-sonnet-baseline   # optional leaderboard identity (else server auto-assigns)
 profile:                       # optional self-reported engine identity → report.json
@@ -53,16 +53,14 @@ extra:                         # optional free-form author notes; never written 
   notes: anything
 # (cost tracking is a CLI toggle now: tp run --no-cost; on by default, providers auto-detected)
 
-tasks:                         # task bindings, keyed by name; `traptask` defaults to ../task
+tasks:                         # task bindings, keyed by alias
   test:
-    traptask:                  # task source; whole block optional, defaults to ../task
-      source: ../task          # local path or git+ URL (polymorphic, like --solution)
-      # source: git+https://github.com/org/repo@rev#subdirectory=X   # remote → cloned into clone_to
-      # clone_to: .trap/repos/task   # optional clone target for a remote (default: hidden cache)
+    source: ../task            # required: local path or git+ URL (polymorphic, like --solution)
+    # source: git+https://github.com/org/repo@rev#subdirectory=X   # remote → cloned into clone_to
+    # clone_to: .trap/repos/task   # optional clone target for a remote (default: hidden cache)
 
   run:                         # second binding; same solution, different task source
-    traptask:
-      source: ../task
+    source: ../task
 ```
 
 **Task side** — `traptask.yaml` is optional. If absent, trap auto-discovers cases by scanning `inputs/` subdirectories and runs in output-only mode (no judge/grader/expected). When present:

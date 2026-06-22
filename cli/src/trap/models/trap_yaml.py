@@ -24,21 +24,19 @@ class Profile(BaseModel):
         return v
 
 
-class TaskSource(BaseModel):
-    # local task dir XOR git+ URL (relative to trap.yaml), same polymorphic form
-    # as --solution; omitted → ../task. A git+ URL clones into clone_to.
-    source: str = "../task"
+class Task(BaseModel):
+    # A task binding: which task this solution is run against. The map key is the
+    # binding's `alias` — the solution author's handle for this task, which also
+    # serves as the local run-dir name and the trapstreet task_id on submit. The
+    # value is just where the task lives. Solution-invariant settings sit at the
+    # top level of trap.yaml (see TrapConfig).
+    alias: str = ""
+    # required: local task dir XOR git+ URL (relative to trap.yaml), same polymorphic
+    # form as --solution. A git+ URL is cloned into clone_to.
+    source: str
     # clone target for a git+ source (relative to trap.yaml, or absolute);
     # omitted → hidden cache .trap/repos/<repo>. Only valid when source is a URL.
     clone_to: Path | None = None
-
-
-class Task(BaseModel):
-    # A task binding: which task this solution is run against, plus the knobs
-    # that legitimately vary per task. Solution-invariant settings sit at the
-    # top level of trap.yaml (see TrapConfig).
-    name: str = ""
-    traptask: TaskSource = TaskSource()  # local path or git+ URL (+ optional clone_to)
 
 
 class TrapConfig(BaseModel):

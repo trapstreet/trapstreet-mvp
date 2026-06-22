@@ -9,13 +9,11 @@ extra:
   notes: reference solution, pure stdlib
 
 tasks:
-  # Local task name = trapstreet task_id so `tp submit` Just Works
+  # Local task alias = trapstreet task_id so `tp submit` Just Works
   # without --as flag. Bench / variant tasks keep their own local names
   # since they don't map to a trapstreet task.
   word-count:
-    traptask:
-      source: ../task
+    source: ../task
 
   run:
-    traptask:
-      source: ../task-run
+    source: ../task-run

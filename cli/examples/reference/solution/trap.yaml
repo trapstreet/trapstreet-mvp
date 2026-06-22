@@ -51,32 +51,30 @@ extra:                            # [optional] default: {}. Free-form escape hat
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Tasks — the task bindings this solution is run against.
-# Each map KEY is the task name (it is BOTH the local run-dir name AND the
-# trapstreet task_id). `tp run <key>` selects one; `tp run` with no argument
-# uses the first entry.
+# Each map KEY is the task ALIAS (your handle for the task — it is BOTH the local
+# run-dir name AND the trapstreet task_id). `tp run <alias>` selects one; `tp run`
+# with no argument uses the first entry.
 # ─────────────────────────────────────────────────────────────────────────────
 
 tasks:
-  example-task:                   # [required] at least one entry; the key is the name.
-
-    traptask:                     # [optional] the whole block defaults to {source: ../task}.
-      source: ../task             # [required-in-block] EITHER a local path (relative to
-                                  #   this trap.yaml) OR a git+ URL. Pick one form:
+  example-task:                   # [required] at least one entry; the key is the alias.
+    source: ../task               # [required] EITHER a local path (relative to this
+                                  #   trap.yaml) OR a git+ URL. Pick one form:
                                   #     local : ../task
                                   #     remote: git+https://github.com/org/repo@<rev>#subdirectory=path
-      # clone_to: .trap/repos/task  # [optional] ONLY valid when source is a git+ URL.
+    # clone_to: .trap/repos/task  # [optional] ONLY valid when source is a git+ URL.
                                   #   default: hidden cache .trap/repos/<repo>. Setting it
                                   #   for a LOCAL source is an error.
 
   # A second binding is just another key — same solution, different task/version:
   # other-task:
-  #   traptask:
-  #     source: git+https://github.com/acme/another-task@v1.2.0
+  #   source: git+https://github.com/acme/another-task@v1.2.0
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Minimal equivalent (everything optional removed):
 #
 #   cmd: uv run python solution.py
 #   tasks:
-#     example-task: {}            # traptask defaults to ../task
+#     example-task:
+#       source: ../task
 # ─────────────────────────────────────────────────────────────────────────────

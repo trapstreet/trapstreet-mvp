@@ -6,5 +6,4 @@ profile:
 
 tasks:
   test:
-    traptask:
-      source: ../task
+    source: ../task

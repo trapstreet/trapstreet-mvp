@@ -13,8 +13,7 @@ cmd: uv run python solution.py
 
 tasks:
   test:
-    traptask:
-      source: ../task          # path to the directory containing traptask.yaml
+    source: ../task            # path to the directory containing traptask.yaml
 ```
 
 Run from the same directory as `trap.yaml`:
@@ -54,8 +53,7 @@ stdin: input.json            # pipe inputs/{case_id}/input.json into stdin
 
 tasks:
   test:
-    traptask:
-      source: ../task
+    source: ../task
 ```
 
 stdout and stderr are captured automatically — you never need to declare them.
@@ -70,7 +68,7 @@ If your solution writes files, declare them so trap knows where to route them:
 tasks:
   test:
     cmd: uv run python solution.py
-    traptask: ../task
+    source: ../task
     file_outputs:
       - result.json
       - summary.txt

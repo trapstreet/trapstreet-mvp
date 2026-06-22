@@ -43,8 +43,9 @@ class ApiClient:
             typer.echo("server unreachable", err=True)
             raise typer.Exit(code=1) from None
 
-    def submit(self, task_name: str, report_path: Path) -> dict[str, Any]:
-        url = f"{self._server}/api/submit/{task_name}"
+    # TODO: client do NOT have task_id
+    def submit(self, task_id: str, report_path: Path) -> dict[str, Any]:
+        url = f"{self._server}/api/submit/{task_id}"
         try:
             resp = self._session.post(
                 url,

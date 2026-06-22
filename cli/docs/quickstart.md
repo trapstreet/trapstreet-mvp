@@ -60,9 +60,7 @@ stdin: input.json            # pipe inputs/{case_id}/input.json into stdin
 
 tasks:
   test:
-    description: Echo solution — reads stdin JSON, writes it back to stdout
-    traptask:
-      source: ../task          # path to the task directory
+    source: ../task            # path to the task directory (local path or git+ URL)
 ```
 
 ---

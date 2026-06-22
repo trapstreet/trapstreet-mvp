@@ -18,12 +18,10 @@ timeout: 600                 # optional — per-case hang ceiling (seconds)
 
 tasks:
   test:
-    traptask:
-      source: ../task
+    source: ../task
 
   run:
-    traptask:
-      source: ../task
+    source: ../task
 ```
 
 ## Solution fields (top level)
@@ -81,13 +79,12 @@ LLM token/spend tracking is **not** a trap.yaml field — it's a run-time, obser
 
 ## `tasks` block
 
-A mapping of task name → task binding. Each key is a name you can pass to `tp run <name>`; with one task, `tp run` uses it automatically.
+A mapping of task alias → task binding. Each key is an alias (your handle for the task) you can pass to `tp run <alias>`; with one task, `tp run` uses it automatically. The alias is also the local run-dir name and the trapstreet task_id on submit. Each binding is just where the task lives:
 
-### `traptask`
+### `source` (required)
 
-The task source (relative to `trap.yaml`). The whole block is optional and defaults to `../task`.
+Where the task lives, relative to `trap.yaml` — EITHER a local path OR a git+ URL (polymorphic, like `--solution`). A git+ URL is cloned. Required per binding (e.g. `source: ../task`).
 
-| Field | Default | Description |
-|---|---|---|
-| `source` | `../task` | Local path or git+ URL (polymorphic, like `--solution`). A git+ URL is cloned. |
-| `clone_to` | hidden cache `.trap/repos/<repo>` | Clone target for a remote source. Only valid when `source` is a URL. |
+### `clone_to`
+
+Clone target for a remote `source` (relative to `trap.yaml`, or absolute). Default: hidden cache `.trap/repos/<repo>`. Only valid when `source` is a git+ URL; setting it for a local source is an error.

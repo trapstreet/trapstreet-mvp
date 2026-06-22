@@ -22,18 +22,18 @@ class TrapLoader:
         data = yaml.safe_load(trap_yaml_path.read_text())
         self.config: TrapConfig = TrapConfig.model_validate(data)
         self.tasks: dict[str, Task] = {
-            name: task.model_copy(update={"name": name}) for name, task in self.config.tasks.items()
+            alias: task.model_copy(update={"alias": alias}) for alias, task in self.config.tasks.items()
         }
 
-    def select_task(self, name: str) -> Task:
-        """Return task by name."""
-        if name not in self.tasks:
-            raise KeyError(f"task {name!r} not found in trap.yaml")
-        return self.tasks[name]
+    def select_task(self, alias: str) -> Task:
+        """Return task by alias (the `tasks:` map key)."""
+        if alias not in self.tasks:
+            raise KeyError(f"task {alias!r} not found in trap.yaml")
+        return self.tasks[alias]
 
-    def resolve_task(self, name: str | None) -> Task:
-        """Return named task, or the first task if name is None."""
-        return self.select_task(name or next(iter(self.tasks)))
+    def resolve_task(self, alias: str | None) -> Task:
+        """Return the aliased task, or the first task if alias is None."""
+        return self.select_task(alias or next(iter(self.tasks)))
 
     @classmethod
     def from_solution(

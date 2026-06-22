@@ -14,7 +14,7 @@ tp run [TASK] [OPTIONS]
 
 | Argument / Flag | Default | Description |
 |---|---|---|
-| `TASK` (positional) | first task in `trap.yaml` | Task name to run |
+| `TASK` (positional) | first task in `trap.yaml` | Task alias (the `tasks:` key) to run |
 | `--config / -c` | `trap.yaml` | Path to the trap config file |
 | `--tag / -t` | (none) | Filter cases by tag; repeatable |
 | `--output / -o` | `rich` | Report renderer: `rich` or `json` |
@@ -43,7 +43,7 @@ tp report [TASK] [RUN] [OPTIONS]
 
 | Argument / Flag | Default | Description |
 |---|---|---|
-| `TASK` (positional) | first task in `trap.yaml` | Task name |
+| `TASK` (positional) | first task in `trap.yaml` | Task alias (the `tasks:` key) |
 | `RUN` (positional) | `latest` | Timestamp directory name or `latest` alias |
 | `--config / -c` | `trap.yaml` | Path to the trap config file |
 | `--output / -o` | `rich` | Report renderer: `rich` or `json` |

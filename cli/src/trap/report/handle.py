@@ -10,14 +10,14 @@ _REPORT_FILENAME = "report.json"
 
 
 class ReportHandle:
-    def __init__(self, workspace: Path, task_name: str, run: str) -> None:
+    def __init__(self, workspace: Path, task_alias: str, run: str) -> None:
         self._workspace = workspace
-        self._task_name = task_name
+        self._task_alias = task_alias
         self._run = run
 
     @property
     def run_dir(self) -> Path:
-        return self._workspace / self._task_name / self._run
+        return self._workspace / self._task_alias / self._run
 
     @property
     def report_json_path(self) -> Path:
